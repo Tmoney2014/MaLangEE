@@ -50,7 +50,7 @@
 | 경로 | 설명 |
 |---|---|
 | `/home/aimaster/projects/MaLangEE` | **프로젝트 루트** (Git 저장소) |
-| `/home/aimaster/deploy.sh` | **배포 스크립트** |
+| `/home/aimaster/projects/MaLangEE/deploy.sh` | **배포 스크립트** |
 | `/var/log/MaLangEE_deploy.log` | **배포 로그** |
 
 ---

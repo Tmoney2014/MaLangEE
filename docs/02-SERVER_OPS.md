@@ -52,7 +52,7 @@ MaLangEE는 **Cron**을 이용해 10분마다 GitHub의 변경사항을 자동�
 
 ### 동작 원리
 ```
-1. Cron이 10분마다 /home/aimaster/deploy.sh 실행
+1. Cron이 10분마다 /home/aimaster/projects/MaLangEE/deploy.sh 실행
    ↓
 2. GitHub main 브랜치 변경 사항 확인 (git fetch)
    ↓
@@ -71,9 +71,9 @@ MaLangEE는 **Cron**을 이용해 10분마다 GitHub의 변경사항을 자동�
 
 **수동 배포 (즉시 적용)**
 ```bash
-/home/aimaster/deploy.sh
+/home/aimaster/projects/MaLangEE/deploy.sh
 # 또는 서비스 재시작만
-/home/aimaster/deploy.sh restart
+/home/aimaster/projects/MaLangEE/deploy.sh restart
 ```
 
 **배포 로그 확인**
@@ -122,7 +122,7 @@ ps aux | grep "python.*app"
 
 **전체 서비스 재시작**
 ```bash
-/home/aimaster/deploy.sh restart
+/home/aimaster/projects/MaLangEE/deploy.sh restart
 ```
 
 **개별 서비스 재시작**
@@ -173,10 +173,10 @@ spring.datasource.password=malangee_password
 tail -f /var/log/MaLangEE_deploy.log
 
 # 권한 확인
-ls -la /home/aimaster/deploy.sh
+ls -la /home/aimaster/projects/MaLangEE/deploy.sh
 
 # 수동 배포 테스트
-/home/aimaster/deploy.sh
+/home/aimaster/projects/MaLangEE/deploy.sh
 ```
 
 **일반적인 원인:**
@@ -245,7 +245,7 @@ sudo tail -f /var/log/postgresql/postgresql.log
 
 **"Permission denied"**
 - 원인: 파일 소유권 문제
-- 해결: `chmod +x /home/aimaster/deploy.sh` 및 `chown aimaster:aimaster /home/aimaster/projects/MaLangEE`
+- 해결: `chmod +x /home/aimaster/projects/MaLangEE/deploy.sh` 및 `chown aimaster:aimaster /home/aimaster/projects/MaLangEE`
 
 ---
 

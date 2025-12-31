@@ -25,13 +25,10 @@ GITHUB_REPO="https://github.com/MaLangEECoperation/MaLangEE.git"
 # 배포 사용자
 DEPLOY_USER="aimaster"
 
-# 웹 서버 (Nginx)
-DOMAIN_NAME="localhost"
-PROJECT_PATH="/"
-FRONTEND_HOST="localhost"
+# 서비스 포트
 FRONTEND_PORT="3000"
-BACKEND_HOST="localhost"
 BACKEND_PORT="8080"
+AI_ENGINE_PORT="5000"
 
 # 데이터베이스
 DB_NAME="malangee"
@@ -73,36 +70,20 @@ sudo bash scripts/1-init_server.sh
 bash scripts/2-setup_env.sh
 ```
 
-### 3️⃣ 웹 서버 설정 (선택사항 - 웹 접속 시)
-```bash
-# Frontend와 Backend를 웹(포트 80)으로 접속 가능하게 설정
-sudo bash scripts/3-setup_web.sh
-
-# 대화형 설정:
-# - Frontend 포트 (기본값: 3000)
-# - Backend 포트 (기본값: 8080)
-# - 도메인/IP (기본값: localhost)
-# - 프로젝트 경로 (기본값: /) 예: /malangee
-
-# 공인 IP 49.50.137.35에 /malangee 경로로 설정한 경우:
-# - Frontend: http://49.50.137.35/malangee
-# - Backend API: http://49.50.137.35/malangee/api
-```
-
-### 4️⃣ 배포 상태 확인
+### 3️⃣ 배포 상태 확인
 ```bash
 # 배포 로그 실시간 확인
 tail -f /var/log/MaLangEE_deploy.log
 ```
 
-### 5️⃣ 저장소 상태 확인
+### 4️⃣ 저장소 상태 확인
 ```bash
 cd /home/aimaster/projects/MaLangEE && git status
 ```
 
 ### 6️⃣ 배포 수동 실행
 ```bash
-/home/aimaster/projects/malangee/scripts/deploy.sh
+/home/aimaster/projects/MaLangEE/deploy.sh
 ```
 
 ---
@@ -116,7 +97,7 @@ cd /home/aimaster/projects/MaLangEE && git status
 | **GitHub 저장소** | https://github.com/MaLangEECoperation/MaLangEE.git |
 | **브랜치** | main |
 | **배포 방식** | Cron (10분마다) |
-| **배포 스크립트** | /home/aimaster/projects/malangee/scripts/deploy.sh |
+| **배포 스크립트** | /home/aimaster/projects/MaLangEE/deploy.sh |
 | **배포 로그** | /var/log/MaLangEE_deploy.log |
 
 ---
@@ -149,8 +130,8 @@ MaLangEE/
 │   ├── config.sh               # 공통 설정 파일 (중앙 관리)
 │   ├── 1-init_server.sh        # 1️⃣ Ubuntu 서버 초기화
 │   ├── 2-setup_env.sh          # 2️⃣ 개발 환경 설치
-│   ├── 3-setup_web.sh          # 3️⃣ Nginx 웹 서버 설정
-│   └── deploy.sh               # 배포 스크립트 (Cron 실행)
+│   └── 3-setup_web.sh          # 3️⃣ Nginx 웹 서버 설정
+├── deploy.sh                    # 🚀 배포 스크립트 (루트)
 └── README.md                    # 프로젝트 소개 (이 파일)
 ```
 
@@ -159,15 +140,6 @@ MaLangEE/
 ## ⚙️ 설정 파일 수정 (config.sh)
 
 기본값이 아닌 다른 환경에서 실행할 경우, `scripts/config.sh`를 수정하세요.
-
-### 예: 공인 IP와 프로젝트 경로 설정
-
-```bash
-# scripts/config.sh 수정
-export DOMAIN_NAME="49.50.137.35"
-export PROJECT_PATH="/malangee"
-export DEPLOY_USER="your_username"  # 필요시
-```
 
 ### 예: 다른 데이터베이스 계정
 
@@ -213,7 +185,7 @@ git reset --hard origin/main
 ### Cron 설정 확인
 ```bash
 crontab -u aimaster -l
-# 출력: */10 * * * * /home/aimaster/deploy.sh >> /var/log/MaLangEE_deploy.log 2>&1
+# 출력: */10 * * * * /home/aimaster/projects/MaLangEE/deploy.sh >> /var/log/MaLangEE_deploy.log 2>&1
 ```
 
 ---
@@ -297,7 +269,7 @@ cd /home/aimaster/projects/MaLangEE && git fetch origin main
 ### 배포 관리
 ```bash
 # 지금 바로 배포
-/home/aimaster/deploy.sh
+/home/aimaster/projects/MaLangEE/deploy.sh
 
 # Cron 설정 확인
 crontab -u aimaster -l
@@ -325,7 +297,7 @@ sudo systemctl status cron
 
 ### 또는 수동 배포
 ```
-1. /home/aimaster/projects/malangee/scripts/deploy.sh 실행
+1. /home/aimaster/projects/MaLangEE/deploy.sh 실행
    ↓
 2. git pull 실행
    ↓
@@ -367,8 +339,9 @@ python main.py
 sudo systemctl start nginx
 
 # 웹 접속
-http://localhost/        # Frontend
-http://localhost/api     # Backend API
+http://localhost:3000       # Frontend
+http://localhost:8080/api  # Backend API
+http://localhost:5000      # AI Engine
 ```
 
 ---
@@ -387,7 +360,7 @@ sudo systemctl status cron
 cd /home/aimaster/projects/MaLangEE && git status
 
 # 4. 수동 배포 테스트
-/home/aimaster/projects/malangee/scripts/deploy.sh
+/home/aimaster/projects/MaLangEE/deploy.sh
 ```
 
 ### Cron 서비스 재시작
@@ -450,7 +423,7 @@ git push origin main
 
 ### 3️⃣ 자동 배포 (10분 이내)
 - Cron이 자동으로 배포 실행
-- 또는 수동으로 `/home/aimaster/deploy.sh` 실행
+- 또는 수동으로 `/home/aimaster/projects/MaLangEE/deploy.sh` 실행
 
 ### 4️⃣ 배포 확인
 ```bash
@@ -471,7 +444,7 @@ cd /home/aimaster/projects/MaLangEE && git log --oneline -1
 
 ### 배포 중
 - [ ] Cron이 10분마다 자동 실행 중
-- [ ] 또는 수동으로 배포: `/home/aimaster/deploy.sh`
+- [ ] 또는 수동으로 배포: `/home/aimaster/projects/MaLangEE/deploy.sh`
 
 ### 배포 후
 - [ ] 배포 로그에 "배포 완료" 메시지 확인
