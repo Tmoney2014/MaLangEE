@@ -39,6 +39,14 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 async def root():
     return FileResponse(os.path.join(static_dir, 'index.html'))
 
+@app.get("/prompt")
+async def get_prompt():
+    prompt_path = os.path.join(module_dir, "..", "prompts", "system_instruction.md")
+    if os.path.exists(prompt_path):
+        with open(prompt_path, "r", encoding="utf-8") as f:
+            return {"prompt": f.read()}
+    return {"prompt": "System prompt not found."}
+
 @app.websocket("/ws/chat")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()

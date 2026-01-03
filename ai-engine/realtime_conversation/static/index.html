@@ -43,6 +43,40 @@
     <div id="status">Disconnected</div>
     <div id="log"></div>
 
+    <div style="margin: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
+        <h3>Session Settings</h3>
+
+        <div>
+            <select id="voiceSelect"
+                class="bg-gray-700 text-white rounded p-2 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none">
+                <option value="alloy">Alloy (Default)</option>
+                <option value="ash">Ash</option>
+                <option value="ballad">Ballad</option>
+                <option value="coral">Coral</option>
+                <option value="echo">Echo</option>
+                <option value="sage">Sage</option>
+                <option value="shimmer">Shimmer</option>
+                <option value="verse">Verse</option>
+            </select>
+        </div>
+
+        <div class="mt-4">
+            <label>System Instructions (Persona): </label>
+            <textarea id="instructionsInput"
+                class="w-full bg-gray-700 text-white rounded p-2 text-sm border border-gray-600 focus:border-blue-500 focus:outline-none"
+                style="width: 100%; height: 500px; box-sizing: border-box;" placeholder="Loading prompt..."></textarea>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            Using Presets:
+            <button onclick="setPersona('tutor')">Friendly Tutor</button>
+            <button onclick="setPersona('strict')">Strict Instructor</button>
+            <button onclick="setPersona('pirate')">Pirate 🏴‍☠️</button>
+        </div>
+
+        <button id="updateSettingsBtn" style="background-color: #4CAF50; color: white;">Update Settings</button>
+    </div>
+
     <script>
         let ws;
         let audioContext;
@@ -53,10 +87,48 @@
         const statusDiv = document.getElementById('status');
         const logDiv = document.getElementById('log');
 
+        // Settings UI
+        const voiceSelect = document.getElementById('voiceSelect');
+        const instructionsInput = document.getElementById('instructionsInput');
+        const updateSettingsBtn = document.getElementById('updateSettingsBtn');
+
         function log(msg) {
             logDiv.innerHTML += `<div>${msg}</div>`;
             logDiv.scrollTop = logDiv.scrollHeight;
         }
+
+        // Persona Presets
+        window.setPersona = (type) => {
+            const instructionsInput = document.getElementById("instructionsInput");
+            if (type === 'tutor') {
+                // 기본값(Tutor)은 서버의 시스템 프롬프트(.md) 원본을 다시 불러옴
+                instructionsInput.placeholder = "Reloading prompt...";
+                loadPrompt();
+            } else if (type === 'strict') {
+                instructionsInput.value = "You are a strict Drill Sergeant. Correct every single grammar mistake immediately and yell if necessary. Demand loud and clear pronunciation!";
+            } else if (type === 'pirate') {
+                instructionsInput.value = "You are a wise old Pirate Captain. Use lots of pirate slang (Ahoy, Matey, Arrr!). Tell stories about the seven seas while teaching English.";
+            }
+        };
+
+        // Update Settings Button Logic
+        updateSettingsBtn.onclick = () => {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert("WebSocket is not connected!");
+                return;
+            }
+
+            const newSettings = {
+                type: "session.update",
+                config: {
+                    voice: voiceSelect.value,
+                    instructions: instructionsInput.value
+                }
+            };
+
+            ws.send(JSON.stringify(newSettings));
+            log(">> Sent Settings Update Request");
+        };
 
         connectBtn.onclick = async () => {
             statusDiv.textContent = "Connecting...";
@@ -238,6 +310,23 @@
             }
             return btoa(binary);
         }
+
+        async function loadPrompt() {
+            try {
+                const response = await fetch('/prompt');
+                const data = await response.json();
+                if (data.prompt) {
+                    const instructionsInput = document.getElementById("instructionsInput");
+                    instructionsInput.value = data.prompt;
+                    instructionsInput.placeholder = "System instructions loaded.";
+                }
+            } catch (e) {
+                console.error("Failed to load prompt:", e);
+            }
+        }
+
+        // Automatically load prompt on page load
+        loadPrompt();
     </script>
 </body>
 

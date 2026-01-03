@@ -1,5 +1,7 @@
+import asyncio
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -19,72 +21,85 @@ class ConversationManager:
        - 필요 시 동적으로 지시사항을 변경할 수 있는 메서드를 제공합니다.
     """
     def __init__(self):
-        # AI의 기본 페르소나 및 행동 지침 정의
-        self.system_instructions = (
-            "You are a helpful and friendly English tutor named 'Malang'. "
-            "Speak naturally and encourage the user to practice speaking English."
-        )
+        # 프롬프트 파일 경로 설정 (현재 파일 기준 상위 디렉토리의 prompts/system_instruction.md)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        prompt_path = os.path.join(current_dir, "..", "prompts", "system_instruction.md")
+        
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                self.system_instructions = f.read().strip()
+        except FileNotFoundError:
+            # 파일이 없을 경우 기본값 사용 (안전장치)
+            self.system_instructions = (
+                "You are a helpful and friendly English tutor named 'Malang'. "
+                "Speak naturally."
+            )
+            print(f"Warning: Prompt file not found at {prompt_path}")
+
+        self.current_config = {
+            "modalities": ["audio", "text"],
+            "instructions": self.system_instructions,
+            "voice": "alloy",
+            "input_audio_format": "pcm16",
+            "output_audio_format": "pcm16",
+            "turn_detection": {
+                "type": "server_vad",
+                "threshold": 0.5,
+                "prefix_padding_ms": 300,
+                "silence_duration_ms": 500,
+            },
+            "input_audio_transcription": {
+                "model": "whisper-1"
+            },
+        }
 
     async def initialize_session(self, openai_ws):
         """
-        [세션 초기화]
-        
-        OpenAI Realtime API에 연결된 직후 호출되어야 합니다.
-        'session.update' 이벤트를 전송하여 다음 항목들을 설정합니다:
-        - Modalities: 오디오와 텍스트 모두 사용
-        - Voice: AI의 목소리 톤 (예: alloy)
-        - VAD (Voice Activity Detection): 서버 측 발화 감지 설정 (감도, 침묵 시간 등)
-        - Transcription: 사용자 입력을 텍스트로 변환(STT)할 모델 (whisper-1)
+        OpenAI 세션을 초기화합니다.
+        저장된 current_config를 사용하여 세션 설정을 전송합니다.
         """
+        self.openai_ws = openai_ws # 웹소켓 객체 저장 (나중에 업데이트 할 때 사용)
+        
+        # 현재 저장된 설정값 로그 출력
+        logger.info(f"세션 초기화 시작. 적용할 설정: {json.dumps(self.current_config, ensure_ascii=False)}")
+
         session_config = {
             "type": "session.update",
-            "session": {
-                "modalities": ["audio", "text"],
-                "instructions": self.system_instructions,
-                "voice": "alloy",  # 옵션: "alloy", "echo", "shimmer" (목소리 톤 선택)
-                # "temperature": 0.8, # 범위: 0.6 - 1.2 (창의성 조절, 높을수록 랜덤)
-                # "max_response_output_tokens": 2000, # 응답 길이 제한 (또는 "inf" 무제한)
-                
-                "input_audio_format": "pcm16", # 클라이언트 오디오 포맷 (24kHz PCM16 가정)
-                "output_audio_format": "pcm16",
-                
-                "turn_detection": {
-                    "type": "server_vad",
-                    "threshold": 0.5,
-                    "prefix_padding_ms": 300,
-                    "silence_duration_ms": 500,
-                    # "create_response": True, # 침묵 감지 시 자동으로 응답 생성 여부
-                },
-                
-                "input_audio_transcription": {
-                    "model": "whisper-1"
-                },
-                
-                # 도구 / 함수 호출 정의 (Function Calling)
-                # "tools": [
-                #   {
-                #     "type": "function",
-                #     "name": "get_weather",
-                #     "description": "현재 위치의 날씨 정보를 가져옵니다.",
-                #     "parameters": {
-                #       "type": "object",
-                #       "properties": {
-                #         "location": { "type": "string" }
-                #       },
-                #       "required": ["location"]
-                #     }
-                #   }
-                # ],
-                # "tool_choice": "auto", # 도구 사용 여부 자동 결정
-            }
+            "session": self.current_config
         }
+        
         await openai_ws.send(json.dumps(session_config))
-        logger.info("VAD 및 지시사항으로 세션 초기화 완료.")
+        logger.info("-> session.update 전송 완료 (초기화)")
 
-    def update_instructions(self, new_instructions: str):
+    async def update_session_settings(self, new_settings: dict) -> bool:
         """
-        시스템 지시사항을 동적으로 업데이트합니다.
+        세션 설정을 업데이트합니다.
+        
+        Returns:
+            bool: 재연결(Reconnect)이 필요한지 여부.
         """
-        self.system_instructions = new_instructions
-        # 참고: 이는 로컬 상태만 변경합니다. 활성 세션을 업데이트하려면 웹소켓 접근 권한이 필요합니다.
-        # 활성 웹소켓으로 업데이트를 푸시하려면 구조 개선이 필요할 수 있습니다.
+        logger.info(f"세션 설정 업데이트 요청: {new_settings.keys()}")
+        should_reconnect = False
+
+        # 1. 내부 설정값 업데이트
+        for key, value in new_settings.items():
+            if key in self.current_config:
+                if self.current_config[key] != value:
+                    self.current_config[key] = value
+                    # voice 변경 시 재연결 필요
+                    if key == "voice":
+                        should_reconnect = True 
+        
+        # 2. 재연결이 필요 없는 경우 즉시 전송
+        if not should_reconnect and self.openai_ws:
+            try:
+                update_payload = {
+                    "type": "session.update",
+                    "session": new_settings
+                }
+                await self.openai_ws.send(json.dumps(update_payload))
+                logger.info(f"-> 실시간 설정 업데이트 전송 완료: {new_settings.keys()}")
+            except Exception as e:
+                logger.error(f"세션 업데이트 전송 실패: {e}")
+        
+        return should_reconnect
