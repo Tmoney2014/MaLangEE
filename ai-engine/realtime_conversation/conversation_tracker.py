@@ -26,10 +26,9 @@ class ConversationTracker:
         # item structure: { "role": str, "content": str, "timestamp": str (iso), "duration_sec": float }
         self.messages: List[Dict] = []
         
-        # 임시 저장소 (말하는 중인 문장의 시작 시간 등을 추적할 때 사용 가능, 현재는 단순화)
+        # 임시 저장소
         self._last_message_ts = None
-
-        logger.info(f"[Tracker] 세션 추적 시작: {self.session_id}")
+        self._last_speech_duration = 0.0 # 방금 끝난 발화의 길이 저장용
 
     def start_user_speech(self):
         """VAD: 사용자가 말을 시작했을 때 호출"""
@@ -41,8 +40,9 @@ class ConversationTracker:
         if self._speech_start_time:
             duration = time.time() - self._speech_start_time
             self.user_speech_total_seconds += duration
+            self._last_speech_duration = duration # 자막 매핑을 위해 임시 저장
             self._speech_start_time = None
-            logger.debug(f"[Tracker] 사용자 발화 종료. 추가 시간: {duration:.2f}초, 누적: {self.user_speech_total_seconds:.2f}초")
+            logger.debug(f"[Tracker] 사용자 발화 종료. 추가 시간: {duration:.2f}초, 누적: {self.user_speech_total_seconds:.2f}초, 마지막: {self._last_speech_duration:.2f}초")
 
     def add_transcript(self, role: str, content: str):
         """
@@ -57,15 +57,22 @@ class ConversationTracker:
 
         now = datetime.now(timezone.utc).isoformat()
         
-        # 비고: 정확한 발화 길이(duration)는 오디오 이벤트랑 매핑해야 완벽하지만, 
-        # 현재 구조에서는 단순 텍스트 로그용으로 0 또는 추정치를 넣고, 
-        # 전체 통계는 user_speech_total_seconds를 신뢰하는 방식을 사용합니다.
+        # 발화 길이 매핑
+        message_duration = 0.0
+        if role == "user":
+            # 사용자의 경우 방금 VAD로 측정된 길이를 사용
+            message_duration = self._last_speech_duration
+            self._last_speech_duration = 0.0 # 사용 후 초기화
+        else:
+            # AI의 경우 (추후 오디오 이벤트 연동 필요), 현재는 단순 글자수 기반 추정 (예: 초당 15자) 
+            # 혹은 0.0으로 둠. 여기서는 0.0
+            pass 
         
         message_entry = {
             "role": role,
             "content": content,
             "timestamp": now,
-            "duration_sec": 0.0 # 개별 메시지 길이는 추후 고도화 필요 시 구현
+            "duration_sec": round(message_duration, 2)
         }
         self.messages.append(message_entry)
         logger.info(f"[Tracker] 메시지 추가 ({role}): {content[:20]}...")
@@ -73,6 +80,7 @@ class ConversationTracker:
     def finalize(self) -> Dict:
         """
         세선 종료 시 최종 리포트를 반환합니다.
+        추후엔 DB 로 저장 요청.
         """
         ended_at_ts = time.time()
         total_duration_sec = ended_at_ts - self.started_at_ts
@@ -84,7 +92,7 @@ class ConversationTracker:
 
         report = {
             "session_id": self.session_id,
-            "title": "New Conversation", # 추후 LLM 요약으로 업데이트 예정
+            "title": "New Conversation", # 초기 사용자 환경 질문으로 업데이트 예정
             "started_at": self.started_at,
             "ended_at": ended_at,
             "total_duration_sec": round(total_duration_sec, 2),

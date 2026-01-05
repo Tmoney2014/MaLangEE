@@ -4,6 +4,7 @@ import logging
 import websockets
 from fastapi import WebSocket, WebSocketDisconnect
 from .conversation_manager import ConversationManager
+from .conversation_tracker import ConversationTracker
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +37,7 @@ class ConnectionHandler:
         self.client_ws = client_ws
         self.api_key = api_key
         self.conversation_manager = ConversationManager()
+        self.tracker = ConversationTracker() # 트래커 초기화 (Session ID는 자동 생성)
         self.openai_ws = None
         self.openai_task = None
 
@@ -176,9 +178,17 @@ class ConnectionHandler:
                         "type": "transcript.done",
                         "transcript": event["transcript"]
                     })
+                    # [Tracker] AI 응답 자막 기록
+                    self.tracker.add_transcript("assistant", event["transcript"])
                 elif event_type == "input_audio_buffer.speech_started":
                     logger.info("VAD가 발화 시작을 감지함")
                     await self.client_ws.send_json({"type": "speech.started"})
+                    # [Tracker] 사용자 발화 시작
+                    self.tracker.start_user_speech()
+
+                elif event_type == "input_audio_buffer.speech_stopped":
+                    # [Tracker] 사용자 발화 종료 (VAD)
+                    self.tracker.stop_user_speech()
                 elif event_type == "conversation.item.input_audio_transcription.completed":
                     transcript = event.get("transcript", "")
                     logger.info(f"사용자 자막: {transcript}")
@@ -186,10 +196,13 @@ class ConnectionHandler:
                         "type": "user.transcript",
                         "transcript": transcript
                     })
+                    # [Tracker] 사용자 자막 기록
+                    self.tracker.add_transcript("user", transcript)
                 elif event_type == "error":
                     logger.error(f"OpenAI 오류: {event.get('error')}")
 
         except Exception as e:
+            logger.error(f"OpenAI 수신 루프 중지됨: {e}")
             pass
 
     async def cleanup(self):
@@ -198,3 +211,8 @@ class ConnectionHandler:
             self.openai_task.cancel()
         if self.openai_ws:
             await self.openai_ws.close()
+        
+        # [Tracker] 세션 종료 및 리포트 생성 (로그 출력)
+        if hasattr(self, 'tracker'):
+            report = self.tracker.finalize()
+            logger.info(f"### Session Report ###\n{json.dumps(report, indent=2, ensure_ascii=False)}")
