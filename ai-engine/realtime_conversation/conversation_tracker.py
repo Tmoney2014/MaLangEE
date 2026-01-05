@@ -83,8 +83,7 @@ class ConversationTracker:
             else:
                 logger.debug(f"[Tracker] WPM Skipped (Short): Words: {word_count}, Time: {message_duration:.2f}s")
         else:
-            # AI의 경우 (추후 오디오 이벤트 연동 필요), 현재는 단순 글자수 기반 추정 (예: 초당 15자) 
-            # 혹은 0.0으로 둠. 여기서는 0.0
+            # AI의 경우 측정 하지 않음(추후 오디오 이벤트 연동 필요) AI발화속도 측정을 하고싶은 경우 여기 활용
             pass 
         
         message_entry = {
