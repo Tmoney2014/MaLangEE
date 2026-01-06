@@ -74,20 +74,17 @@ else
     print_success "패키지 업데이트 완료"
 fi
 
-# 3) Java 설치
-print_header "3️⃣ Java 설치"
+# 3) Poetry 설치
+print_header "3️⃣ Poetry 설치 (Python 패키지 매니저)"
 
-if command -v java &> /dev/null; then
-    JAVA_VERSION=$(java -version 2>&1 | head -1)
-    print_success "Java 이미 설치됨: $JAVA_VERSION"
+if command -v poetry &> /dev/null; then
+    POETRY_VERSION=$(poetry --version)
+    print_success "Poetry 이미 설치됨: $POETRY_VERSION"
 else
-    print_info "Java 설치 중..."
-    if command -v sudo &> /dev/null; then
-        sudo apt-get install -y openjdk-17-jdk-headless &>/dev/null
-        print_success "Java 설치 완료"
-    else
-        print_warning "Java 설치를 위해서는 sudo 권한이 필요합니다"
-    fi
+    print_info "Poetry 설치 중..."
+    curl -sSL https://install.python-poetry.org | python3 -
+    export PATH="/root/.local/bin:$PATH"
+    print_success "Poetry 설치 완료"
 fi
 
 # 4) Node.js 설치
@@ -313,17 +310,18 @@ echo "     - 포트 번호, API URL 등 환경 설정"
 echo ""
 echo "  2️⃣ 개발 의존성 설치:"
 echo "     cd frontend && npm install"
-echo "     cd ../backend && mvn clean install"
+echo "     cd ../backend && poetry config virtualenvs.in-project true && poetry install"
 echo "     cd ../ai-engine && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
 echo ""
-echo "  3️⃣ 데이터베이스 테이블 생성 (필요시):"
-echo "     psql -h localhost -U <데이터베이스_사용자> -d <데이터베이스명> -f database/init.sql"
+echo "  3️⃣ 데이터베이스 테이블 생성:"
+echo "     # Backend 서버 최초 실행 시 자동으로 테이블이 생성됩니다."
+echo "     cd backend && poetry run uvicorn app.main:app --reload"
 echo ""
 echo -e "${CYAN}📖 프로젝트 구조:${NC}"
 echo ""
 echo "  MaLangEE/"
 echo "  ├── frontend/              # React/Vue 프론트엔드"
-echo "  ├── backend/               # Java Spring Boot REST API"
+echo "  ├── backend/               # Python FastAPI REST API"
 echo "  ├── ai-engine/             # Python AI 엔진"
 echo "  ├── database/              # PostgreSQL 설정"
 echo "  ├── docs/                  # 문서"

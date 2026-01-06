@@ -42,9 +42,32 @@ else
     echo "  ✓ Maven 이미 설치됨"
 fi
 
+# Poetry 설치 확인 (Python Backend)
+# 주의: 스크립트가 root로 실행되므로 DEPLOY_USER(aimaster) 계정으로 설치해야 함
+if ! sudo -u "$DEPLOY_USER" command -v poetry &> /dev/null; then
+    echo "  ℹ️  $DEPLOY_USER 계정에 Poetry가 없습니다. 설치를 진행합니다..."
+    
+    # aimaster 권한으로 설치 스크립트 실행
+    sudo -u "$DEPLOY_USER" bash -c "curl -sSL https://install.python-poetry.org | python3 -"
+    
+    # PATH 설정 확인 및 추가 (root 세션용)
+    POETRY_BIN="/home/$DEPLOY_USER/.local/bin/poetry"
+    echo "  ✓ Poetry 설치 완료 ($POETRY_BIN)"
+else
+    echo "  ✓ Poetry 이미 설치됨"
+fi
+
 # Maven 경로 확인
 MVN_PATH=$(which mvn)
 echo "  ℹ️  Maven 경로: $MVN_PATH"
+
+# Poetry 경로 확인
+POETRY_PATH=$(which poetry)
+# 만약 root path에 없다면 사용자 홈 디렉토리 확인 시도 (일반적인 경우)
+if [ -z "$POETRY_PATH" ]; then
+    POETRY_PATH="/home/$DEPLOY_USER/.local/bin/poetry"
+fi
+echo "  ℹ️  Poetry 경로: $POETRY_PATH"
 
 # Node/NPM 경로 확인
 NPM_PATH=$(which npm)
@@ -68,19 +91,19 @@ fi
 
 cat > /etc/systemd/system/malangee-backend.service <<EOF
 [Unit]
-Description=MaLangEE Backend Service (Spring Boot)
+Description=MaLangEE Backend Service (FastAPI)
 After=syslog.target network.target postgresql.service
 
 [Service]
-User=$USER
+User=$DEPLOY_USER
 WorkingDirectory=$BACKEND_DIR
-# Maven 경로 동적 적용
-ExecStart=$MVN_PATH spring-boot:run
+# Poetry를 통한 Uvicorn 실행
+ExecStart=$POETRY_PATH run uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_PORT
 SuccessExitStatus=143
 Restart=always
 RestartSec=10
-Environment=JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-Environment=PATH=/usr/bin:/usr/local/bin
+Environment=PYTHONPATH=$BACKEND_DIR
+Environment=PATH=/usr/bin:/usr/local/bin:/home/$DEPLOY_USER/.local/bin
 
 [Install]
 WantedBy=multi-user.target

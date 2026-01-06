@@ -141,26 +141,28 @@ fi
 
 # 3. Backend 빌드
 if [[ "$TARGET" == "all" || "$TARGET" == "backend" ]]; then
-    echo -e "${GREEN}3️⃣ Backend 빌드 (Spring Boot)${NC}"
+    echo -e "${GREEN}3️⃣ Backend 빌드 ${NC}"
     echo "[INFO] Spring Boot 빌드 시작" | tee -a $LOG_FILE
     
     if [ -d "$BACKEND_DIR" ]; then
         cd "$BACKEND_DIR" || exit 1
         
-        # Maven Wrapper 확인
-        if [ -f "./mvnw" ]; then
-            ./mvnw clean package -DskipTests | tee -a $LOG_FILE
+        # Poetry 이용한 의존성 설치
+        if [ -f "pyproject.toml" ]; then
+            poetry config virtualenvs.in-project true
+            # --no-dev: 프로덕션 환경이므로 개발용 의존성 제외 (속도 향상)
+            poetry install
         else
-            mvn clean package -DskipTests | tee -a $LOG_FILE
+            echo -e "${YELLOW}⚠ pyproject.toml이 없습니다.${NC}"
         fi
         
         if [ $? -ne 0 ]; then
-            echo -e "${RED}✗ Backend 빌드 실패!${NC}"
-            echo "[ERROR] Backend mvn build 실패" | tee -a $LOG_FILE
+            echo -e "${RED}✗ Backend 의존성 설치 실패!${NC}"
+            echo "[ERROR] Backend poetry install 실패" | tee -a $LOG_FILE
             exit 1
         fi
         
-        echo -e "${GREEN}✓ Backend 빌드 완료${NC}"
+        echo -e "${GREEN}✓ Backend 준비 완료${NC}"
         cd "$PROJECT_ROOT" || exit 1
     else
         echo -e "${YELLOW}⚠ Backend 폴더가 없습니다: $BACKEND_DIR${NC}"
