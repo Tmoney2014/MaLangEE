@@ -142,15 +142,15 @@ fi
 # 3. Backend 빌드
 if [[ "$TARGET" == "all" || "$TARGET" == "backend" ]]; then
     echo -e "${GREEN}3️⃣ Backend 빌드 ${NC}"
-    echo "[INFO] Spring Boot 빌드 시작" | tee -a $LOG_FILE
+    echo "[INFO] 빌드 시작" | tee -a $LOG_FILE
     
     if [ -d "$BACKEND_DIR" ]; then
         cd "$BACKEND_DIR" || exit 1
         
         # Poetry 이용한 의존성 설치
         if [ -f "pyproject.toml" ]; then
+
             poetry config virtualenvs.in-project true
-            # --no-dev: 프로덕션 환경이므로 개발용 의존성 제외 (속도 향상)
             poetry install
         else
             echo -e "${YELLOW}⚠ pyproject.toml이 없습니다.${NC}"
@@ -173,7 +173,7 @@ fi
 # 4. AI-Engine 업데이트
 if [[ "$TARGET" == "all" || "$TARGET" == "ai" ]]; then
     echo -e "${GREEN}4️⃣ AI-Engine 업데이트 (Python)${NC}"
-    echo "[INFO] Python AI 서버 업데이트" | tee -a $LOG_FILE
+    echo "[INFO] Python AI 엔진 업데이트" | tee -a $LOG_FILE
     
     if [ -d "$AI_DIR" ]; then
         cd "$AI_DIR" || exit 1
