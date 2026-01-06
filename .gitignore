@@ -210,3 +210,4 @@ frontend/.vite/
 
 # Database
 *.db
+.idea/
