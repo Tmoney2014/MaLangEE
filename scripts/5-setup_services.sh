@@ -92,8 +92,9 @@ ExecStart=$POETRY_PATH run uvicorn app.main:app --host 0.0.0.0 --port $BACKEND_P
 SuccessExitStatus=143
 Restart=always
 RestartSec=10
-Environment=PYTHONPATH=$BACKEND_DIR
+Environment=PYTHONPATH=$BACKEND_DIR:$AI_DIR
 Environment=PATH=/usr/bin:/usr/local/bin:/home/$DEPLOY_USER/.local/bin
+Environment=OPENAI_API_KEY=$OPENAI_API_KEY
 
 [Install]
 WantedBy=multi-user.target
@@ -119,10 +120,10 @@ Description=MaLangEE AI Engine Service (Python)
 After=syslog.target network.target
 
 [Service]
-User=$USER
-WorkingDirectory=$AI_DIR
-# Python 경로 동적 적용, 출력 버퍼링 비활성화(-u)
-ExecStart=$PYTHON_PATH -u app.py
+User=$DEPLOY_USER
+WorkingDirectory=$BACKEND_DIR
+# Backend의 Poetry 가상환경을 사용하여 AI-Engine 실행
+ExecStart=$POETRY_PATH run python ../ai-engine/app.py
 Restart=always
 RestartSec=10
 

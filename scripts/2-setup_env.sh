@@ -255,6 +255,33 @@ else
     print_warning "PostgreSQL이 설치되지 않았습니다."
 fi
 
+# 8) OpenAI API Key 설정 (대화형)
+print_header "8️⃣ OpenAI API Key 설정"
+
+SECRETS_FILE="$SCRIPT_DIR/secrets.sh"
+
+if [ -f "$SECRETS_FILE" ]; then
+    print_info "이미 secrets.sh 파일이 존재합니다: $SECRETS_FILE"
+    print_info "OpenAI Key 설정을 건너뜁니다."
+else
+    echo -e "${YELLOW}AI-Engine 구동을 위해 OpenAI API Key가 필요합니다.${NC}"
+    echo -e "입력하지 않고 엔터를 치면 나중에 수동으로 secrets.sh 파일에 입력해야 합니다.\n"
+    
+    read -p "OpenAI API Key 입력 (sk-...): " OPENAI_KEY_INPUT
+    
+    if [ -n "$OPENAI_KEY_INPUT" ]; then
+        echo "#!/bin/bash" > "$SECRETS_FILE"
+        echo "# 자동 생성된 비밀 키 파일 (Git에 커밋하지 마세요)" >> "$SECRETS_FILE"
+        echo "export OPENAI_API_KEY=\"$OPENAI_KEY_INPUT\"" >> "$SECRETS_FILE"
+        
+        chmod 600 "$SECRETS_FILE"
+        print_success "API Key가 설정되었습니다: $SECRETS_FILE"
+    else
+        print_warning "API Key가 설정되지 않았습니다. (나중에 scripts/secrets.sh 파일을 생성하세요)"
+    fi
+fi
+
+
 echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║        ✓ 설치 완료!                   ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}\n"

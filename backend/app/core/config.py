@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "CHANGE_THIS_TO_A_STRONG_SECRET_KEY"  # 프로덕션에서는 반드시 환경변수로 덮어씌워야 함
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 240
+    
+    # External APIs
+    OPENAI_API_KEY: Optional[str] = None
     
     # Database
     # 1. 로컬 개발/테스트용: SQLite 사용 (기본값)
