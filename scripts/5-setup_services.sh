@@ -31,16 +31,8 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# 0. 필수 패키지 설치 확인 (Maven)
+# 0. 필수 패키지 확인
 echo -e "\n${GREEN}0️⃣ 필수 패키지 확인 및 설치${NC}"
-if ! command -v mvn &> /dev/null; then
-    echo "  ℹ️  Maven이 설치되어 있지 않습니다. 설치를 진행합니다..."
-    apt-get update -y
-    apt-get install -y maven
-    echo "  ✓ Maven 설치 완료"
-else
-    echo "  ✓ Maven 이미 설치됨"
-fi
 
 # Poetry 설치 확인 (Python Backend)
 # 주의: 스크립트가 root로 실행되므로 DEPLOY_USER(aimaster) 계정으로 설치해야 함
@@ -57,9 +49,7 @@ else
     echo "  ✓ Poetry 이미 설치됨"
 fi
 
-# Maven 경로 확인
-MVN_PATH=$(which mvn)
-echo "  ℹ️  Maven 경로: $MVN_PATH"
+
 
 # Poetry 경로 확인
 POETRY_PATH=$(which poetry)
