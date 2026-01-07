@@ -8,6 +8,9 @@ from io import BytesIO
 import wave
 import uuid
 from typing import Any, Awaitable, Callable, Optional
+from datetime import datetime, timezone
+import sys
+from pathlib import Path
 
 import websockets
 from openai import OpenAI
@@ -23,6 +26,14 @@ from .logging_utils import get_logger
 from .scenario_builder import ScenarioBuilder
 
 ClientSender = Callable[[dict[str, Any]], Awaitable[None]]
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2] / "backend"
+if str(BACKEND_ROOT) not in sys.path:
+    sys.path.append(str(BACKEND_ROOT))
+
+from app.db.database import AsyncSessionLocal
+from app.repositories.chat_repository import ChatRepository
+from app.schemas.chat import SessionCreate
 
 
 async def relay_server(host: str, port: int, stop_event: Optional[asyncio.Event] = None) -> None:
@@ -110,8 +121,33 @@ async def handle_client(client_ws) -> None:
             )
 
     async def on_complete(scenario_builder: ScenarioBuilder) -> None:
+        session_id = state.get("session_id")
+        if not session_id:
+            session_id = str(uuid.uuid4())
+            state["session_id"] = session_id
         scenario_builder.ensure_defaults()
         state_snapshot = scenario_builder.state
+        scenario_state_payload = {
+            "place": state_snapshot.place,
+            "partner": state_snapshot.partner,
+            "goal": state_snapshot.goal,
+            "attempts": state_snapshot.attempts,
+            "asked_fields": sorted(list(state_snapshot.asked_fields)),
+            "completed": state_snapshot.completed,
+        }
+        try:
+            await _persist_scenario_state(
+                session_id=session_id,
+                scenario_state=scenario_state_payload,
+            )
+        except Exception as exc:
+            logger.error("Scenario save failed [%s]: %s", client_id, exc)
+            await send_to_client(
+                {
+                    "type": "error",
+                    "message": "Scenario save failed",
+                }
+            )
         logger.info("Scenario completed [%s]", client_id)
         await send_to_client(
             {
@@ -120,6 +156,7 @@ async def handle_client(client_ws) -> None:
                     "place": state_snapshot.place,
                     "conversation_partner": state_snapshot.partner,
                     "conversation_goal": state_snapshot.goal,
+                    "sessionId": session_id,
                 },
                 "completed": True,
             }
@@ -298,3 +335,28 @@ async def _wait_ready(event: asyncio.Event, timeout: float) -> bool:
 
 def _new_client_id() -> str:
     return uuid.uuid4().hex[:8]
+
+
+async def _persist_scenario_state(
+    *,
+    session_id: str,
+    scenario_state: dict[str, Any],
+) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    session_data = SessionCreate(
+        session_id=session_id,
+        title=None,
+        started_at=now,
+        ended_at=now,
+        total_duration_sec=0.0,
+        user_speech_duration_sec=0.0,
+        messages=[],
+        scenario_place=scenario_state.get("place"),
+        scenario_partner=scenario_state.get("partner"),
+        scenario_goal=scenario_state.get("goal"),
+        scenario_state_json=scenario_state,
+        scenario_completed_at=now,
+    )
+    async with AsyncSessionLocal() as db:
+        repo = ChatRepository(db)
+        await repo.create_session_log(session_data, user_id=None)

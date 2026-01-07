@@ -216,6 +216,8 @@ TODO.md
 # JetBrains
 .idea/
 
+# macOS
+.DS_Store
+
 # Scripts Secrets
 scripts/secrets.sh
-
