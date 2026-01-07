@@ -210,6 +210,8 @@ frontend/.vite/
 
 # Database
 *.db
+SPEC.md
+TODO.md
 
 # JetBrains
 .idea/
