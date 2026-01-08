@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 from app.repositories.chat_repository import ChatRepository
-from app.schemas.chat import SessionCreate
+from app.schemas.chat import SessionCreate, SessionSummary, SessionResponse
 from app.db.models import ConversationSession, User
 from realtime_conversation.connection_handler import ConnectionHandler
 from fastapi import WebSocket
@@ -16,6 +16,31 @@ class ChatService:
 
     async def get_recent_session(self, user_id: int) -> Optional[ConversationSession]:
         return await self.chat_repo.get_recent_session_by_user(user_id)
+
+    async def get_user_sessions(self, user_id: int, skip: int = 0, limit: int = 20) -> List[SessionSummary]:
+        results = await self.chat_repo.get_sessions_by_user(user_id, skip, limit)
+        summaries = []
+        for session, count in results:
+            # SQLAlchemy model to Pydantic mapping
+            summary = SessionSummary(
+                session_id=session.session_id,
+                title=session.title,
+                started_at=session.started_at,
+                ended_at=session.ended_at,
+                total_duration_sec=session.total_duration_sec,
+                user_speech_duration_sec=session.user_speech_duration_sec,
+                created_at=session.created_at,
+                updated_at=session.updated_at,
+                message_count=count
+            )
+            summaries.append(summary)
+        return summaries
+
+    async def get_session_detail(self, session_id: str, user_id: int) -> Optional[SessionResponse]:
+        session = await self.chat_repo.get_session_by_id(session_id, user_id)
+        if not session:
+            return None
+        return SessionResponse.model_validate(session)
 
     async def get_history_for_websocket(self, session_id: str, user_id: int) -> tuple[List[Dict[str, Any]], Optional[str]]:
         """

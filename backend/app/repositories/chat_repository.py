@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 from app.db.models import ConversationSession, ChatMessage
 from app.schemas.chat import SessionCreate
@@ -93,3 +94,16 @@ class ChatRepository:
         )
         result = await self.db.execute(stmt)
         return result.scalars().first()
+
+    async def get_sessions_by_user(self, user_id: int, skip: int = 0, limit: int = 20):
+        stmt = (
+            select(ConversationSession, func.count(ChatMessage.id))
+            .outerjoin(ChatMessage, ChatMessage.session_id == ConversationSession.session_id)
+            .where(ConversationSession.user_id == user_id)
+            .group_by(ConversationSession.session_id)
+            .order_by(ConversationSession.ended_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.all()

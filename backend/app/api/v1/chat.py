@@ -2,19 +2,27 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, Query
 
 from app.api import deps
 from app.db import models
-from app.schemas.chat import SessionCreate
+from app.schemas.chat import SessionCreate, SessionSummary, SessionResponse
 from app.services.chat_service import ChatService
 
 router = APIRouter()
 
-@router.post("/logs", status_code=201)
+@router.put("/logs", status_code=201, summary="대화 로그 동기화 및 세션 연동")
 async def upload_chat_log(
     session_data: SessionCreate,
     current_user: models.User = Depends(deps.get_current_user),
     service: ChatService = Depends(deps.get_chat_service),
 ):
     """
-    AI Engine으로부터 대화 로그를 수신하여 DB에 저장합니다.
+    게스트 세션의 소유권을 로그인한 사용자로 변경(동기화)합니다.
+    
+    [용도]
+    - WebSocket 연결 종료 시 데이터는 서버에서 자동 저장되므로, 이 엔드포인트는 **'사용자 ID 매핑(Map User ID)'** 용도로 사용됩니다.
+    - 프론트엔드에서는 `session_id`를 포함하여 요청하며, 데이터 중복 누적을 방지하기 위해 
+      통계 값(duration)은 0, 메시지는 빈 리스트로 전송하는 것을 권장합니다.
+    
+    [동작]
+    - 입력받은 `session_id`에 해당하는 세션을 찾아 `user_id`를 현재 로그인한 사용자로 업데이트합니다.
     """
     try:
         await service.save_chat_log(session_data, user_id=current_user.id)
@@ -22,6 +30,32 @@ async def upload_chat_log(
     except Exception as e:
         # 이미 존재하는 세션 ID 등 에러 처리
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/sessions", response_model=List[SessionSummary])
+async def get_user_sessions(
+    skip: int = 0,
+    limit: int = 20,
+    current_user: models.User = Depends(deps.get_current_user),
+    service: ChatService = Depends(deps.get_chat_service),
+):
+    """
+    사용자의 대화 세션 목록을 조회합니다. (메시지 내용 미포함, 개수만 포함)
+    """
+    return await service.get_user_sessions(current_user.id, skip, limit)
+
+@router.get("/sessions/{session_id}", response_model=SessionResponse)
+async def get_session_detail(
+    session_id: str,
+    current_user: models.User = Depends(deps.get_current_user),
+    service: ChatService = Depends(deps.get_chat_service),
+):
+    """
+    특정 대화 세션의 상세 내용을 조회합니다. (메시지 내용 포함)
+    """
+    session = await service.get_session_detail(session_id, current_user.id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session
 
 @router.get("/recent")
 async def get_recent_chat_session(
