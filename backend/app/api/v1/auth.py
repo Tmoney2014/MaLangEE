@@ -10,7 +10,7 @@ from app.services.auth_service import AuthService
 
 router = APIRouter()
 
-@router.post("/signup", response_model=user.User)
+@router.post("/signup", response_model=user.User, summary="회원가입")
 async def signup(
     user_in: user.UserCreate,
     service: AuthService = Depends(deps.get_auth_service),
@@ -27,7 +27,7 @@ async def signup(
             detail=str(e)
         )
 
-@router.post("/login", response_model=token.Token)
+@router.post("/login", response_model=token.Token, summary="OAuth2 호환 로그인")
 async def login_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     service: AuthService = Depends(deps.get_auth_service),
@@ -56,7 +56,7 @@ async def login_access_token(
         token_type="bearer",
     )
 
-@router.post("/check-login-id", response_model=CheckAvailabilityResponse)
+@router.post("/check-login-id", response_model=CheckAvailabilityResponse, summary="로그인 ID 중복 확인")
 async def check_login_id(
     check_data: user.LoginIdCheck,
     service: AuthService = Depends(deps.get_auth_service),
@@ -67,7 +67,7 @@ async def check_login_id(
     is_available = await service.check_login_id_availability(check_data.login_id)
     return CheckAvailabilityResponse(is_available=is_available)
 
-@router.post("/check-nickname", response_model=CheckAvailabilityResponse)
+@router.post("/check-nickname", response_model=CheckAvailabilityResponse, summary="닉네임 중복 확인")
 async def check_nickname(
     check_data: user.NicknameCheck,
     service: AuthService = Depends(deps.get_auth_service),
