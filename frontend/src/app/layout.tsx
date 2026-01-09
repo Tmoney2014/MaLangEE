@@ -22,6 +22,11 @@ const notoSans = Noto_Sans({
 export const metadata: Metadata = {
   title: "MalangEE - English Free Talking AI Chat-bot",
   description: "English Free Talking AI Chat-bo",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
