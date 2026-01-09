@@ -14,6 +14,7 @@ class ChatService:
     async def save_chat_log(self, session_data: SessionCreate, user_id: int = None) -> ConversationSession:
         return await self.chat_repo.create_session_log(session_data, user_id)
 
+
     async def get_recent_session(self, user_id: int) -> Optional[ConversationSession]:
         return await self.chat_repo.get_recent_session_by_user(user_id)
 

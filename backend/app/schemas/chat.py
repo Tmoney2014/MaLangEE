@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -16,6 +16,12 @@ class SessionCreate(BaseModel):
     total_duration_sec: float
     user_speech_duration_sec: float
     messages: List[MessageSchema]
+    scenario_place: Optional[str] = None
+    scenario_partner: Optional[str] = None
+    scenario_goal: Optional[str] = None
+    scenario_state_json: Optional[Dict[str, Any]] = None
+    scenario_completed_at: Optional[str] = None
+    deleted: Optional[bool] = None
 
 class SessionResponse(SessionCreate):
     created_at: Optional[datetime] = None
@@ -23,3 +29,4 @@ class SessionResponse(SessionCreate):
 
     class Config:
         from_attributes = True
+

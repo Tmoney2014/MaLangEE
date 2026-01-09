@@ -23,6 +23,7 @@ async def upload_chat_log(
         # 이미 존재하는 세션 ID 등 에러 처리
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/recent")
 async def get_recent_chat_session(
     current_user: models.User = Depends(deps.get_current_user),
