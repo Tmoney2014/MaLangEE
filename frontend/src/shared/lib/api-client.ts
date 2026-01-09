@@ -21,7 +21,10 @@ class ApiClient {
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string>): string {
-    const url = new URL(endpoint, this.baseUrl);
+    // endpoint에서 시작하는 '/'를 제거하여 baseUrl과 올바르게 결합
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const fullUrl = `${this.baseUrl}/${cleanEndpoint}`;
+    const url = new URL(fullUrl);
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
