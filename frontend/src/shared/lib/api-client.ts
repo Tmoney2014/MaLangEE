@@ -1,3 +1,5 @@
+import { config } from "./config";
+
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 interface RequestOptions extends Omit<RequestInit, "method" | "body"> {
@@ -98,7 +100,7 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseUrl: config.apiUrl,
   getToken: () => (typeof window !== "undefined" ? localStorage.getItem("access_token") : null),
 });
 

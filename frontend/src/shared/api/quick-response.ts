@@ -3,16 +3,16 @@ import type { QuickResponse, QuickResponseCreate, QuickResponseScenario } from "
 
 export const quickResponseApi = {
   getScenario: async (): Promise<QuickResponseScenario> => {
-    return apiClient.get<QuickResponseScenario>("/api/v1/quick-response/scenario");
+    return apiClient.get<QuickResponseScenario>("/quick-response/scenario");
   },
 
   create: async (data: QuickResponseCreate): Promise<QuickResponse> => {
-    return apiClient.post<QuickResponse>("/api/v1/quick-response", data);
+    return apiClient.post<QuickResponse>("/quick-response", data);
   },
 
   getAll: async (skip = 0, limit = 10): Promise<QuickResponse[]> => {
     return apiClient.get<QuickResponse[]>(
-      `/api/v1/quick-response?skip=${skip}&limit=${limit}`
+      `/quick-response?skip=${skip}&limit=${limit}`
     );
   },
 };

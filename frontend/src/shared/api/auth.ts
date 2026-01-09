@@ -1,9 +1,9 @@
 import { apiClient } from "../lib/api-client";
-import type { Token, User } from "../types/api";
+import type { Token, User, DuplicateCheckResponse } from "../types/api";
 
 export const authApi = {
   register: async (email: string, username: string, password: string): Promise<User> => {
-    return apiClient.post<User>("/api/v1/auth/register", {
+    return apiClient.post<User>("/auth/register", {
       email,
       username,
       password,
@@ -15,7 +15,7 @@ export const authApi = {
     formData.append("username", email);
     formData.append("password", password);
 
-    return fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/v1/auth/login`, {
+    return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -30,7 +30,19 @@ export const authApi = {
   },
 
   getCurrentUser: async (): Promise<User> => {
-    return apiClient.get<User>("/api/v1/auth/me");
+    return apiClient.get<User>("/auth/me");
+  },
+
+  checkLoginId: async (login_id: string): Promise<DuplicateCheckResponse> => {
+    return apiClient.post<DuplicateCheckResponse>("/auth/check-login-id", {
+      login_id,
+    });
+  },
+
+  checkNickname: async (nickname: string): Promise<DuplicateCheckResponse> => {
+    return apiClient.post<DuplicateCheckResponse>("/auth/check-nickname", {
+      nickname,
+    });
   },
 };
 
