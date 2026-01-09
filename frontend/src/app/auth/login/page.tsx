@@ -140,7 +140,7 @@ export default function LoginPage() {
                   <Link href="/auth/find" className="hover:text-[#7B6CF6]" style={{ letterSpacing: "-0.1px" }}>
                     아이디/비밀번호 찾기
                   </Link>
-                  <Link href="/auth/register" className="hover:text-[#7B6CF6]" style={{ letterSpacing: "-0.1px" }}>
+                  <Link href="/auth/signup" className="hover:text-[#7B6CF6]" style={{ letterSpacing: "-0.1px" }}>
                     회원가입
                   </Link>
                 </div>

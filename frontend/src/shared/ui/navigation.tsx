@@ -13,7 +13,7 @@ const navigationItems = [
 ];
 
 // Navigation을 숨길 경로들
-const hiddenPaths = ["/login", "/auth/login", "/auth/register"];
+const hiddenPaths = ["/login", "/auth/login", "/auth/signup"];
 
 export function Navigation() {
   const pathname = usePathname();
