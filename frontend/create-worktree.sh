@@ -7,7 +7,7 @@
 
   # 첫 번째 아규먼트를 워크트리 이름으로 받기
   ARGUMENT=$1
-  WORKTREE_PATH="../worktree/$ARGUMENT"
+  WORKTREE_PATH="./../worktree/$ARGUMENT"
 
   # 워크트리 생성하고 성공하면 현재 위치 변경
   if git worktree add "$WORKTREE_PATH"; then

@@ -121,3 +121,123 @@ npx shadcn@latest add input
 
 - 단위 테스트: `frontend/tests/*.test.tsx`
 - E2E 테스트: `frontend/e2e/*.spec.ts`
+
+## 개발 패턴 가이드
+
+### Tailwind CSS 4 설정
+
+globals.css에 `@source` 지시어로 소스 파일 경로 명시 필수:
+
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* 소스 파일 경로 명시 (필수) */
+@source "../";
+```
+
+CSS 변수로 커스텀 색상 추가:
+
+```css
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+}
+
+:root {
+  --brand: oklch(0.55 0.2 280);
+  --brand-foreground: oklch(1 0 0);
+}
+```
+
+### shadcn/ui 컴포넌트 확장
+
+cva로 커스텀 변형 추가 (brand 버튼 예시):
+
+```tsx
+import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "@radix-ui/react-slot";
+
+const buttonVariants = cva("base-classes...", {
+  variants: {
+    variant: {
+      default: "...",
+      brand: "bg-brand text-brand-foreground hover:bg-brand/90 rounded-full",
+      "brand-outline": "border-2 border-brand text-brand rounded-full",
+    },
+    size: {
+      xl: "h-14 px-6 py-4 text-2xl",
+    },
+  },
+});
+
+// asChild 패턴으로 Link 등과 조합 가능
+interface ButtonProps extends VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
+
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
+    return <Comp ref={ref} {...props} />;
+  }
+);
+```
+
+### 특정 경로에서 Navigation 숨기기
+
+```tsx
+// shared/ui/navigation.tsx
+const hiddenPaths = ["/login", "/auth/login", "/auth/register"];
+
+export function Navigation() {
+  const pathname = usePathname();
+
+  if (hiddenPaths.includes(pathname)) {
+    return null;
+  }
+
+  return <nav>...</nav>;
+}
+```
+
+### 린트 에러 수정 패턴
+
+**empty interface → type alias:**
+
+```tsx
+// ❌ 에러
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+// ✅ 수정
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>;
+```
+
+**useEffect 내 setState → 파생 상태:**
+
+```tsx
+// ❌ 에러: useEffect 내 setState
+const [isWaiting, setIsWaiting] = useState(false);
+useEffect(() => {
+  if (data?.lastMessage?.role === "assistant") {
+    setIsWaiting(false); // cascading render 유발
+  }
+}, [data]);
+
+// ✅ 수정: 파생 상태로 계산
+const isWaiting = mutation.isSuccess && lastMessage?.role === "user";
+```
+
+### Figma MCP 연동
+
+`.env.local`에 API 키 설정:
+
+```env
+FIGMA_API_KEY=your-figma-token
+```
+
+Figma 디자인 데이터 추출 후 구현:
+1. Figma MCP로 노드 데이터 조회
+2. 색상, 레이아웃, 타이포그래피 추출
+3. CSS 변수로 테마 색상 정의
+4. shadcn/ui 컴포넌트 확장하여 구현
