@@ -74,8 +74,21 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: "Request failed" }));
-      throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+
+      // 400: 일반적인 에러 (예: 이미 존재하는 아이디)
+      if (response.status === 400 && errorData.detail) {
+        throw new Error(errorData.detail);
+      }
+
+      // 422: 유효성 검사 오류
+      if (response.status === 422 && errorData.detail && Array.isArray(errorData.detail)) {
+        const validationErrors = errorData.detail.map((err: any) => err.msg).join(", ");
+        throw new Error(validationErrors || "입력 정보를 확인해주세요");
+      }
+
+      // 기타 에러
+      throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
     }
 
     return response.json();
