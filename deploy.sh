@@ -152,13 +152,24 @@ if [[ "$TARGET" == "all" || "$TARGET" == "backend" ]]; then
         
         if [ -f "pyproject.toml" ]; then
             poetry config virtualenvs.in-project true
+            
+            # 1차 시도: 일반 설치
             poetry install
+            
+            # 실패 시 Lock 파일 갱신 후 재시도
+            if [ $? -ne 0 ]; then
+                echo -e "${YELLOW}⚠ 의존성 설치 실패. Lock 파일 불일치 가능성 있음.${NC}"
+                echo "[INFO] poetry lock 실행 중..." | tee -a $LOG_FILE
+                
+                poetry lock
+                poetry install
+            fi
         else
             echo -e "${YELLOW}⚠ pyproject.toml이 없습니다.${NC}"
         fi
         
         if [ $? -ne 0 ]; then
-            echo -e "${RED}✗ 의존성 설치 실패!${NC}"
+            echo -e "${RED}✗ 의존성 설치 최종 실패!${NC}"
             echo "[ERROR] poetry install 실패" | tee -a $LOG_FILE
             exit 1
         fi
