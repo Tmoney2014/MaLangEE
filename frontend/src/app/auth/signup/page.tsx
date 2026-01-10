@@ -87,18 +87,8 @@ export default function RegisterPage() {
         sizes="100vw"
         className="object-cover"
       />
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-10 bottom-10 h-32 w-32 rounded-full bg-white/50 blur-3xl" />
-        <div className="absolute right-10 top-16 h-24 w-24 rounded-full bg-[#f8f0ff] blur-2xl" />
-        <div className="absolute bottom-20 right-24 h-24 w-24 rounded-full bg-[#d5c7ff] opacity-60 blur-2xl" />
-        <div className="absolute left-10 top-24 h-20 w-20 rounded-full bg-[#fdf4c7] opacity-70 blur-2xl" />
-        <div className="absolute bottom-36 left-32 h-16 w-16 rounded-full bg-[#eecbff] opacity-70 blur-xl" />
-      </div>
-
       <div className="relative flex min-h-screen w-full items-center justify-center px-6 py-12">
         <div className="relative w-full max-w-[540px] overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-white/80 via-white/70 to-[#f0e8ff]/80 shadow-[0_20px_80px_rgba(125,106,246,0.25)] backdrop-blur-2xl">
-          <div className="absolute -left-12 top-12 h-28 w-28 rounded-full bg-[#f6e8ff] blur-3xl" />
-          <div className="absolute right-10 top-6 h-16 w-16 rounded-full bg-[#fdf4c7] blur-2xl" />
 
           <div className="relative space-y-8 px-8 py-10 md:px-12 md:py-12">
             <div className="space-y-2">
@@ -251,7 +241,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-      </div>
+    </div>
     </GuestGuard>
   );
 }
