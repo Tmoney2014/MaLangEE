@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { GlassCard } from "./GlassCard";
 
-interface FullLayoutProps {
+interface SplitViewLayoutProps {
   leftChildren?: React.ReactNode;
   rightChildren: React.ReactNode;
   bgImage?: string;
@@ -10,15 +10,15 @@ interface FullLayoutProps {
   rightColSpan?: number; // 오른쪽 영역의 그리드 비율 (1-11)
 }
 
-export const FullLayout = ({
+export const SplitViewLayout = ({
   leftChildren,
   rightChildren,
   bgImage = "/images/login-bg-01.png", // 기본 배경 설정
   leftColSpan = 6, // 기본값 6/12
   rightColSpan = 6, // 기본값 6/12
-}: FullLayoutProps) => {
+}: SplitViewLayoutProps) => {
   return (
-    <div className="relative flex h-screen flex-col items-center justify-center overflow-hidden text-[#1F1C2B] w-full">
+    <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden text-[#1F1C2B]">
       {/* Background Image */}
       <Image src={bgImage} alt="Background" fill priority sizes="100vw" className="object-cover" />
 
@@ -32,28 +32,28 @@ export const FullLayout = ({
         >
           <div className="text-lg font-semibold text-[#5F51D9]">MalangEE</div>
           <div className="relative flex items-center gap-6">
-            <div className="relative flex h-24 w-24 items-center justify-center">
+            <div className="relative flex items-center justify-center">
               <Image
                 src="/images/malangee.svg"
-                alt="MalangEE mascot"
-                width={96}
-                height={96}
+                alt="MalangEE"
+                width={128}
+                height={128}
                 priority
-                className="h-24 w-24 object-contain"
+                className="object-contain"
               />
             </div>
           </div>
           {leftChildren && <div className="space-y-2">{leftChildren}</div>}
         </div>
 
-          {/* Right Content Section */}
-          <div
-            className="relative col-span-1 flex items-center justify-center"
-            style={{
-              gridColumn: `span ${rightColSpan} / span ${rightColSpan}`,
-            }}
-          >
-          <GlassCard withBackground={false} className="!min-h-0 !h-full">
+        {/* Right Content Section */}
+        <div
+          className="relative col-span-1 flex items-center justify-center"
+          style={{
+            gridColumn: `span ${rightColSpan} / span ${rightColSpan}`,
+          }}
+        >
+          <GlassCard withBackground={false} className="!h-full !min-h-0">
             {rightChildren}
           </GlassCard>
         </div>
@@ -61,3 +61,4 @@ export const FullLayout = ({
     </div>
   );
 };
+

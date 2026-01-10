@@ -10,5 +10,5 @@ export { MicButton } from "./MicButton";
 export { GlassCard } from "./GlassCard";
 export * from "./GlassCard";
 export * from "./MicButton";
-export * from "./FullLayout";
+export * from "./SplitViewLayout";
 
