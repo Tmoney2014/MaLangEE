@@ -169,7 +169,7 @@ export default function LoginPage() {
 
                   <button
                     type="button"
-                    onClick={() => router.push("/chat")}
+                    onClick={() => router.push("/auth/scenario-select")}
                     className="h-[56px] w-full rounded-full border-2 border-[#7B6CF6] bg-white text-base font-semibold text-[#7B6CF6] transition hover:bg-[#f6f4ff]"
                   >
                     바로 대화해보기
