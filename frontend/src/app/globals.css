@@ -150,3 +150,33 @@
   }
 }
 
+/* 공통 스크롤바 스타일 */
+.custom-scrollbar {
+  position: relative;
+  overflow-y: auto;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #C9C5F3;
+  border-radius: 9999px;
+  min-height: 100px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #b8b0e8;
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-color: #C9C5F3 transparent;
+  scrollbar-width: thin;
+}
+
