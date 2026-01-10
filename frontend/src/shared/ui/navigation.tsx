@@ -19,7 +19,7 @@ export function Navigation() {
   const pathname = usePathname();
 
   // 로그인/인증 페이지에서는 Navigation 숨김
-  if (hiddenPaths.includes(pathname)) {
+  if (pathname && hiddenPaths.includes(pathname)) {
     return null;
   }
 

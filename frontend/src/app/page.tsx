@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/utils";
 import Image from "next/image";
 

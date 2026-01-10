@@ -1,36 +1,85 @@
-import { DailyReflectionForm } from "@/features/daily-reflection/ui/daily-reflection-form";
-import { DailyReflectionList } from "@/features/daily-reflection/ui/daily-reflection-list";
-import { FeatureDescription } from "@/shared/ui/feature-description";
+"use client";
 
-export default function DashboardPage() {
+import { type FC } from "react";
+import { AuthGuard } from "@/features/auth";
+import { Button } from "@/shared/ui/button";
+import Link from "next/link";
+
+const DashboardPage: FC = () => {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Daily Reflection</h1>
-      
-      <FeatureDescription
-        title="오늘의 회고 영작"
-        description="하루를 마무리하며 오늘 있었던 일을 영어로 3문장 작성하고, AI가 문법과 표현을 첨삭해드립니다. 매일 꾸준히 연습하면 영어 표현력이 자연스럽게 향상됩니다."
-        features={[
-          "하루의 경험을 영어로 정리",
-          "AI 기반 문법 및 표현 피드백",
-          "더 나은 표현 제안",
-          "일일 참여율 및 성장 추이 확인"
-        ]}
-        example="예: '오늘 뭐 했어?' → 'Today I went to the library and studied English. I also met my friend for lunch. It was a productive day.'"
-      />
-
-      {/* Daily Reflection Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Write Your Reflection</h2>
-          <DailyReflectionForm />
+    <AuthGuard>
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold">Dashboard</h1>
+          <p className="mt-2 text-muted-foreground">
+            Welcome to MaLangEE Learning Platform
+          </p>
         </div>
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Your Reflections</h2>
-          <DailyReflectionList />
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-semibold">Quick Response</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Practice quick English responses with AI feedback
+            </p>
+            <Button asChild variant="brand">
+              <Link href="/quick-response">Start Practice</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-semibold">Scenario Practice</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Engage in realistic conversation scenarios
+            </p>
+            <Button asChild variant="brand">
+              <Link href="/scenario">Start Scenario</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-semibold">Think Aloud</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Practice expressing your thoughts in English
+            </p>
+            <Button asChild variant="brand">
+              <Link href="/think-aloud">Start Practice</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-semibold">Rephrasing</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Improve your expression skills with rephrasing exercises
+            </p>
+            <Button asChild variant="brand">
+              <Link href="/rephrasing">Start Practice</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-semibold">Daily Reflection</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Reflect on your daily learning progress
+            </p>
+            <Button asChild variant="brand">
+              <Link href="/daily-reflection">View Reflection</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="mb-2 text-xl font-semibold">My Progress</h2>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Track your learning achievements and statistics
+            </p>
+            <Button asChild variant="brand-outline">
+              <Link href="/progress">View Progress</Link>
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </AuthGuard>
   );
-}
+};
 
+export default DashboardPage;

@@ -9,21 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **핵심 가치**: 초저지연(0.5초 이내) 실시간 음성 대화 및 피드백
 - **아키텍처**: React (Next.js 16) + Python FastAPI + OpenAI Realtime API
 - **패키지 매니저**: yarn (frontend 디렉토리 내에서 실행)
-
-## 프로젝트 구조
-
-```
-/
-├── frontend/          # Next.js 16 + React 19 + TypeScript
-│   └── src/
-│       ├── app/       # Next.js App Router 페이지
-│       ├── features/  # 기능별 모듈 (FSD)
-│       ├── shared/    # 공용 유틸리티, UI, API
-│       ├── entities/  # 비즈니스 엔티티 (예정)
-│       └── widgets/   # 복합 UI 컴포넌트 (예정)
-├── design/            # HTML/CSS 프로토타입
-└── docs/              # 프로젝트 계획 및 문서
-```
+- **런타임**: Node.js 20+ (`.nvmrc` 참조, `nvm use` 실행)
 
 ## 필수 명령어
 
@@ -38,16 +24,43 @@ yarn build            # 프로덕션 빌드
 yarn lint             # ESLint 실행
 yarn lint:fix         # ESLint 자동 수정
 yarn format           # Prettier 포맷팅
+yarn tsc --noEmit     # 타입 체크
 
-# 테스팅
-yarn test             # Vitest 단위 테스트
+# 테스팅 - Vitest (단위 테스트)
+yarn test             # 전체 단위 테스트 실행
 yarn test:ui          # Vitest UI 모드
 yarn test:coverage    # 커버리지 리포트
-yarn test:e2e         # Playwright E2E 테스트
+yarn test -- 파일경로  # 특정 파일 테스트
+
+# 테스팅 - Playwright (E2E)
+yarn test:e2e         # 전체 E2E 테스트
 yarn test:e2e:ui      # Playwright UI 모드
 
 # 스토리북
 yarn storybook        # 스토리북 (localhost:6006)
+```
+
+## 프로젝트 구조
+
+```
+/
+├── frontend/          # Next.js 16 + React 19 + TypeScript
+│   └── src/
+│       ├── app/       # Next.js App Router 페이지
+│       │   ├── auth/  # 인증 관련 페이지 (login, signup, scenario-select)
+│       │   └── ...    # 기타 페이지
+│       ├── entities/  # 비즈니스 엔티티 (도메인 모델)
+│       ├── features/  # 독립적 기능 모듈
+│       ├── widgets/   # 복합 UI 컴포넌트 (여러 entities/features 조합)
+│       └── shared/    # 공용 유틸리티 (모든 레이어에서 사용)
+│           ├── api/   # API 클라이언트 및 React Query 설정
+│           ├── lib/   # 유틸리티 함수
+│           ├── ui/    # 재사용 가능한 UI 컴포넌트 (shadcn/ui)
+│           ├── types/ # 공용 타입 정의
+│           └── styles/# 글로벌 스타일
+├── design/            # HTML/CSS 프로토타입
+├── fsd-example/       # FSD 구조 레퍼런스 예제
+└── docs/              # 프로젝트 계획 및 문서
 ```
 
 ## 기술 스택
@@ -61,34 +74,56 @@ yarn storybook        # 스토리북 (localhost:6006)
 - **차트**: Recharts
 - **i18n**: next-intl
 
-## 아키텍처 패턴
+## FSD (Feature-Sliced Design) 아키텍처
 
-### FSD (Feature-Sliced Design) 구조
+### 레이어 구조
 
 ```
-features/
-├── auth/              # 인증 (로그인/회원가입)
-├── rephrasing/        # 표현 바꿔말하기 학습
-├── scenario/          # 시나리오 기반 대화
-├── think-aloud/       # 생각 말하기 연습
-├── quick-response/    # 빠른 응답 훈련
-└── daily-reflection/  # 일일 회고
-
-shared/
-├── api/               # API 클라이언트 함수
-├── ui/                # 공용 UI 컴포넌트 (Button, Input, etc.)
-├── lib/               # 유틸리티 함수
-├── types/             # 공용 타입 정의
-└── styles/            # 글로벌 스타일
+src/
+├── app/        # 애플리케이션 진입점, 라우팅, 프로바이더
+├── widgets/    # 복합 UI 컴포넌트 (여러 features/entities 조합)
+├── features/   # 독립적 기능 모듈 (사용자 액션 처리)
+├── entities/   # 비즈니스 엔티티 (도메인 모델, UI)
+└── shared/     # 공용 유틸리티 (모든 레이어에서 사용)
 ```
 
-### 레이어 간 의존성 규칙
+### 레이어 의존성 규칙
+
+```
+app → widgets → features → entities → shared
+     (상위 레이어는 하위 레이어만 import 가능)
+```
 
 - `shared` → 외부 라이브러리만 의존
 - `entities` → `shared` 의존
 - `features` → `shared`, `entities` 의존
 - `widgets` → `shared`, `entities`, `features` 의존
 - `app` → 모든 레이어 의존
+
+### 슬라이스 구조 규칙
+
+```
+features/auth/           # 슬라이스 예시
+├── api/                 # API 호출 함수 및 React Query 훅
+├── model/               # 타입 정의 및 Zod 스키마
+├── ui/                  # UI 컴포넌트 및 스토리북
+│   ├── LoginForm.tsx
+│   ├── LoginForm.stories.tsx
+│   └── LoginForm.test.tsx
+├── hook/                # 커스텀 훅
+└── index.ts             # Public API export (슬라이스 외부 진입점)
+```
+
+### Cross-Import 패턴 (@x)
+
+같은 레이어 간 import가 필요한 경우 `@x` 디렉토리 사용:
+
+```typescript
+// entities/user/@x/memo.ts
+// memo 엔티티에서 user 엔티티를 참조할 때 사용
+export { type User, type UserBadgeProps } from '../model/User';
+export { UserBadge } from '../ui/UserBadge';
+```
 
 ## 코드 컨벤션
 
@@ -117,10 +152,18 @@ npx shadcn@latest add input
 - **인증**: JWT 기반
 - **DB**: PostgreSQL (비동기 SQLAlchemy)
 
-## 테스트 파일 위치
+## 테스트 구조
 
-- 단위 테스트: `frontend/tests/*.test.tsx`
-- E2E 테스트: `frontend/e2e/*.spec.ts`
+```
+frontend/
+├── tests/                # Vitest 단위 테스트
+│   └── *.test.tsx
+├── e2e/                  # Playwright E2E 테스트
+│   └── *.spec.ts
+└── src/**/               # 컴포넌트 근처 테스트 (권장)
+    ├── *.test.ts         # 단위 테스트
+    └── *.stories.tsx     # 스토리북
+```
 
 ## 개발 패턴 가이드
 

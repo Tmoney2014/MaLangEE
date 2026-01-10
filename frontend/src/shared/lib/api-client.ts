@@ -83,7 +83,7 @@ class ApiClient {
 
       // 422: 유효성 검사 오류
       if (response.status === 422 && errorData.detail && Array.isArray(errorData.detail)) {
-        const validationErrors = errorData.detail.map((err: any) => err.msg).join(", ");
+        const validationErrors = errorData.detail.map((err: { msg: string }) => err.msg).join(", ");
         throw new Error(validationErrors || "입력 정보를 확인해주세요");
       }
 
