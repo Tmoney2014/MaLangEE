@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import type { ChatHistoryItem } from "@/shared/types/chat";
 import { ChatTranscriptPopup } from "./ChatTranscriptPopup";
-import { X } from "lucide-react";
+import { PopupLayout } from "@/shared/ui/PopupLayout";
 
 interface ChatDetailPopupProps {
   session: ChatHistoryItem;
@@ -24,34 +24,20 @@ export const ChatDetailPopup: React.FC<ChatDetailPopupProps> = ({ session, onClo
     { speaker: "말랭이", content: "I'm glad you enjoyed it! What was your favorite part?", timestamp: "10:36" },
   ];
 
+  const headerContent = (
+    <div className="flex-1 space-y-2">
+      <h2 className="text-2xl font-bold text-[#1F1C2B]">{session.title}</h2>
+      <div className="flex items-center gap-4 text-sm text-[#6A667A]">
+        <span>{session.date}</span>
+        <span>•</span>
+        <span>{session.duration}</span>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      >
-      <div
-        className="relative mx-4 w-full max-w-2xl rounded-[32px] border border-white/60 bg-white shadow-[0_20px_80px_rgba(123,108,246,0.3)] backdrop-blur-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="space-y-6 px-8 py-8">
-          {/* 첫 번째 행: 제목, 날짜, 시간 */}
-          <div className="space-y-2">
-            <div className="flex items-start justify-between">
-              <h2 className="text-2xl font-bold text-[#1F1C2B]">{session.title}</h2>
-              <button
-                onClick={onClose}
-                className="text-gray-400 transition-colors hover:text-gray-600"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-[#6A667A]">
-              <span>{session.date}</span>
-              <span>•</span>
-              <span>{session.duration}</span>
-            </div>
-          </div>
+      <PopupLayout onClose={onClose} headerContent={headerContent} maxWidth="2xl">
 
           {/* 두 번째 행: 대화 요약 + 전문보기 버튼 */}
           <div className="space-y-3">
@@ -120,9 +106,7 @@ export const ChatDetailPopup: React.FC<ChatDetailPopupProps> = ({ session, onClo
               </div>
             </div>
           </div>
-        </div>
-      </div>
-      </div>
+      </PopupLayout>
 
       {/* 전문 스크립트 팝업 */}
       {showTranscript && (

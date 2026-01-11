@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
 import {
   type NicknameUpdateFormData,
   nicknameUpdateSchema,
@@ -11,6 +10,7 @@ import {
   useNicknameCheck,
   useUpdateNickname,
 } from "@/features/auth";
+import { PopupLayout } from "@/shared/ui/PopupLayout";
 
 interface NicknameChangePopupProps {
   onClose: () => void;
@@ -98,28 +98,8 @@ export const NicknameChangePopup: React.FC<NicknameChangePopupProps> = ({
     !nicknameCheck.isAvailable;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="relative mx-4 w-full max-w-md rounded-[32px] border border-white/60 bg-white shadow-[0_20px_80px_rgba(123,108,246,0.3)] backdrop-blur-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="space-y-6 px-8 py-8">
-          {/* 헤더 */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-[#1F1C2B]">닉네임 변경</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 transition-colors hover:text-gray-600"
-            >
-              <X size={24} />
-            </button>
-          </div>
-
-          {/* 폼 */}
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <PopupLayout onClose={onClose} title="닉네임 변경" maxWidth="md">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             {/* 기존 닉네임 입력 (읽기 전용) */}
             <div className="flex flex-col gap-2">
               <label
@@ -195,8 +175,6 @@ export const NicknameChangePopup: React.FC<NicknameChangePopupProps> = ({
               {updateNicknameMutation.isPending ? "변경 중..." : "변경하기"}
             </button>
           </form>
-        </div>
-      </div>
-    </div>
+    </PopupLayout>
   );
 };
