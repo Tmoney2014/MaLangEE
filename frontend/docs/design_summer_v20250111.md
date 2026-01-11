@@ -10,10 +10,22 @@
 
 ## 📊 변경 통계
 
+### 초기 작업 (문서 작성 시점)
 ```
 47개 파일 변경
 1,866줄 추가
 679줄 삭제
+```
+
+### 문서 작성 이후 추가 작업
+```
+- Button 컴포넌트 추가 및 전역 적용
+- 대화 완료 페이지 추가
+- 비활동 감지 로직 추가
+- 에러 처리 개선
+- 배포 스크립트 개선
+- 개발 환경 도구 추가 (nodemon)
+- 테스트 라이브러리 업데이트
 ```
 
 ## 🎯 주요 작업 내용
@@ -222,7 +234,31 @@ interface ChatHistoryItem {
 
 ## 📝 주요 커밋 히스토리
 
+### 문서 작성 이후 (2026-01-11 ~ 2026-01-12)
 ```
+fdbc8b5 feat: add nodemon for development and enhance error handling in duplicate checks
+d2f88e9 feat: add Button component with customizable variants and sizes
+87458b4 refactor: enhance deploy script with timeout handling for npm install and build processes
+d52420d fix: @testing-library/react 및 관련 패키지 버전 업데이트
+facc9b4 fix: Button 컴포넌트의 대문자 파일명으로 수정
+4d40d50 feat: add comprehensive Copilot instructions for MaLangEE architecture and workflows
+bfaf2f7 feat: enhance deploy script to include Next.js and FastAPI server startup with health checks
+fbfe0e2 fix: update import paths for Button component to match file naming convention
+49eb92c fix: @testing-library/react 버전 업데이트
+2ccd163 feat: 대화 중 비활동 및 팝업 로직 추가
+95162a4 feat: Button 컴포넌트 추가 및 기존 버튼 교체
+d4aaa8f feat: 대화 완료 페이지 및 관련 로직 추가
+7ead329 refactor: PopupLayout 닫기 버튼 위치 및 헤더 구조 개선
+7e57b5b feat: 자막 토글 및 대화 상태 테스트 버튼 추가
+cb9df3e feat: 비활동 및 대화 상태 관리 로직 추가
+9dc2219 feat: 로그인 팝업 추가 및 마이크 버튼 기능 수정
+d006a2e feat: 말랭이 대화 설정 페이지 추가
+0b551cb feat: 페이지 레이아웃 및 텍스트 그룹 스타일 수정
+```
+
+### 문서 작성 시점까지 (2026-01-11)
+```
+6ccbee0 feat: feature/design 브런치의 전반적인 작업사항 설명문서 추가
 9d10de4 feat: PopupLayout 컴포넌트 추가 및 팝업 UI 공통화
 c407bf7 feat: 닉네임 변경 페이지 및 관련 UI 제거
 45f5e84 feat: 인증 오류 처리 개선 및 로딩 상태 로직 업데이트
@@ -312,10 +348,135 @@ NEXT_PUBLIC_DEBUG_MODE=false
 - [README.md](../README.md) - 프로젝트 개요
 - [FSD 아키텍처 가이드](../docs/fsd-architecture.md)
 
+## 📅 문서 작성 이후 작업 내역 (2026-01-11 ~ 2026-01-12)
+
+### 8. 공통 Button 컴포넌트 추가
+
+#### 8.1 Button 컴포넌트 (`src/shared/ui/Button.tsx`)
+- **주요 기능**:
+  - 다양한 variant 지원: `default`, `outline`, `ghost`, `brand`, `brand-outline`, `primary`, `outline-purple`, `secondary`, `solid`
+  - 다양한 size 지원: `default`, `sm`, `md`, `lg`, `xl`, `auto`
+  - `fullWidth` 옵션으로 전체 너비 버튼 지원
+  - 로딩 상태 표시 (`isLoading` prop)
+  - `asChild` prop으로 Slot 패턴 지원 (Radix UI)
+  - `class-variance-authority`를 사용한 타입 안전한 variant 관리
+- **스타일**: 보라색 계열 브랜드 색상 적용, 둥근 모서리 (`rounded-full`)
+- **사용처**: 전체 프로젝트의 버튼을 통일된 컴포넌트로 교체
+
+### 9. 대화 완료 페이지 구현
+
+#### 9.1 대화 완료 페이지 (`src/app/chat/complete/page.tsx`)
+- **기능**:
+  - 대화 종료 후 완료 화면 표시
+  - 총 대화 시간 및 사용자 발화 시간 통계 표시
+  - 세션 데이터를 `sessionStorage`에서 읽어와 표시
+  - "홈으로 돌아가기" 버튼으로 새로운 대화 시작 페이지로 이동
+- **레이아웃**: FullLayout 사용
+- **데이터 관리**: `sessionStorage`를 통한 대화 시간 데이터 저장/조회
+
+### 10. 비활동 감지 및 팝업 로직
+
+#### 10.1 비활동 타이머 구현
+- **기능**:
+  - 사용자 비활동 15초 후 안내 메시지 표시
+  - 추가 5초 후 응답 대기 팝업 표시
+  - 사용자 응답 시 타이머 자동 리셋
+- **적용 페이지**:
+  - 시나리오 선택 페이지 (`src/app/auth/scenario-select/page.tsx`)
+  - 대화 페이지 (`src/app/chat/conversation/page.tsx`)
+- **UX 개선**: 사용자가 대화 중 멈춰있을 때 적절한 안내 제공
+
+### 11. 대화 상태 관리 개선
+
+#### 11.1 대화 상태 관리 로직
+- **기능**:
+  - 대화 상태 테스트 버튼 추가 (개발용)
+  - 자막 토글 기능 추가
+  - 대화 상태에 따른 UI 업데이트
+- **상태 관리**: React hooks를 사용한 상태 관리 개선
+
+### 12. 로그인 팝업 추가
+
+#### 12.1 로그인 팝업 구현
+- **기능**:
+  - 팝업 형태의 로그인 UI
+  - 마이크 버튼 기능 수정 및 개선
+- **UX 개선**: 전체 페이지 전환 없이 로그인 가능
+
+### 13. 말랭이 대화 설정 페이지
+
+#### 13.1 대화 설정 페이지 추가
+- **기능**:
+  - 대화 시작 전 설정 옵션 제공
+  - 사용자 선호도 설정
+- **레이아웃**: 일관된 디자인 시스템 적용
+
+### 14. PopupLayout 개선
+
+#### 14.1 PopupLayout 리팩토링
+- **개선사항**:
+  - 닫기 버튼 위치 조정
+  - 헤더 구조 개선
+  - 더 나은 접근성 및 UX
+
+### 15. 에러 처리 개선
+
+#### 15.1 중복 체크 에러 처리 개선 (`src/features/auth/hook/use-duplicate-check.ts`)
+- **개선사항**:
+  - 상세한 에러 메시지 표시
+  - 네트워크 에러, 404, 500 등 에러 타입별 다른 메시지
+  - 콘솔 로깅을 통한 디버깅 지원
+  - 사용자 친화적인 에러 메시지
+
+#### 15.2 API 클라이언트 URL 처리 개선 (`src/shared/lib/api-client.ts`)
+- **개선사항**:
+  - 상대 경로 URL 처리 개선
+  - 개발 환경에서 Next.js rewrites와 호환
+  - `window.location.origin`을 base URL로 사용하는 로직 추가
+
+### 16. 개발 환경 개선
+
+#### 16.1 nodemon 추가
+- **기능**: 개발 중 파일 변경 시 자동 재시작
+- **설정**: `package.json`에 nodemon 설정 추가
+
+#### 16.2 테스트 라이브러리 업데이트
+- **변경사항**:
+  - `@testing-library/react` 및 관련 패키지 버전 업데이트
+  - 테스트 환경 안정성 개선
+
+### 17. 배포 스크립트 개선
+
+#### 17.1 배포 스크립트 개선
+- **개선사항**:
+  - `npm install` 및 빌드 프로세스에 타임아웃 처리 추가
+  - Next.js 및 FastAPI 서버 시작 시 health check 추가
+  - 패키지 의존성 업데이트
+- **안정성**: 배포 프로세스의 안정성 및 신뢰성 향상
+
+### 18. Copilot Instructions 추가
+
+#### 18.1 Copilot 설정 파일 추가
+- **기능**: MaLangEE 아키텍처 및 워크플로우에 대한 포괄적인 Copilot 지시사항 추가
+- **목적**: AI 어시스턴트가 프로젝트 구조와 패턴을 더 잘 이해하도록 지원
+
+## 📊 업데이트 통계 (2026-01-11 이후)
+
+```
+추가 작업:
+- Button 컴포넌트 추가 및 전역 적용
+- 대화 완료 페이지 추가
+- 비활동 감지 로직 추가
+- 에러 처리 개선
+- 배포 스크립트 개선
+- 개발 환경 도구 추가
+```
+
 ## 👥 작성자
 
 - Claude Code AI Assistant
 - 작성일: 2026-01-11
+- 최종 업데이트: 2026-01-12
 
 ---
 
