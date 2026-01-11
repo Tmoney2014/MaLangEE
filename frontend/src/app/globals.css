@@ -2,7 +2,7 @@
 @import "tw-animate-css";
 
 /* Tailwind CSS 4: 소스 파일 경로 명시 */
-@source "../";
+@source "../**/*.{ts,tsx,js,jsx}";
 
 @custom-variant dark (&:is(.dark *));
 

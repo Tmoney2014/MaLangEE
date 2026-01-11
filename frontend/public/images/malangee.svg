@@ -13,11 +13,11 @@
         /* 1. 이목구비 복합 이동 (위-아래 -> 위-아래-왼쪽살짝) */
         @keyframes faceMoveComplex {
         0%, 100% { transform: translate(0, 0); }
-        15% { transform: translate(0, -12px); }      /* 1차 위 */
-        30% { transform: translate(0, 6px); }        /* 1차 아래 */
+        15% { transform: translate(0, -6px); }      /* 1차 위 */
+        30% { transform: translate(0, 12px); }        /* 1차 아래 */
         45% { transform: translate(0, 0); }          /* 중간 정지 */
-        60% { transform: translate(0, -12px); }      /* 2차 위 */
-        75% { transform: translate(-8px, 6px); }     /* 2차 아래 + 왼쪽 살짝 */
+        60% { transform: translate(0, -6px); }      /* 2차 위 */
+        75% { transform: translate(-8px, 12px); }     /* 2차 아래 + 왼쪽 살짝 */
         }
 
         /* 2. 눈 깜빡임 (3초 주기, 'ㅡ'자 변형) */
