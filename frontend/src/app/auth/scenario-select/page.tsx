@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { MicButton, Button } from "@/shared/ui";
@@ -23,9 +23,69 @@ export default function ScenarioSelectPage() {
   const [isListening, setIsListening] = useState(false);
   const [textOpacity, setTextOpacity] = useState(1);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [showInactivityMessage, setShowInactivityMessage] = useState(false);
+  const [showWaitPopup, setShowWaitPopup] = useState(false);
+  const [showEndChatPopup, setShowEndChatPopup] = useState(false);
+
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const waitTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 비활동 타이머 시작 (15초 후 메시지 표시)
+  const startInactivityTimer = () => {
+    clearInactivityTimer();
+    inactivityTimerRef.current = setTimeout(() => {
+      setShowInactivityMessage(true);
+      setIsListening(true);
+      // 비활동 메시지 표시 후 5초 뒤 응답 대기 팝업
+      startWaitTimer();
+    }, 15000);
+  };
+
+  // 비활동 타이머 정리
+  const clearInactivityTimer = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+      inactivityTimerRef.current = null;
+    }
+  };
+
+  // 응답 대기 타이머 시작 (5초 후 팝업 표시)
+  const startWaitTimer = () => {
+    clearWaitTimer();
+    waitTimerRef.current = setTimeout(() => {
+      setShowWaitPopup(true);
+      setIsListening(false);
+    }, 5000);
+  };
+
+  // 응답 대기 타이머 정리
+  const clearWaitTimer = () => {
+    if (waitTimerRef.current) {
+      clearTimeout(waitTimerRef.current);
+      waitTimerRef.current = null;
+    }
+  };
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      clearInactivityTimer();
+      clearWaitTimer();
+    };
+  }, []);
+
+  // 사용자 활동 시작 (타이머 초기화)
+  const resetTimers = () => {
+    clearInactivityTimer();
+    clearWaitTimer();
+    setShowInactivityMessage(false);
+  };
 
   const handleMicClick = () => {
     if (currentState === 3) return;
+
+    // 사용자 활동 - 타이머 리셋
+    resetTimers();
 
     // Fade out text
     setTextOpacity(0);
@@ -47,6 +107,8 @@ export default function ScenarioSelectPage() {
           setTimeout(() => {
             setShowLoginPopup(true);
           }, 1500);
+          // 비활동 타이머 시작
+          startInactivityTimer();
         } else {
           setCurrentState(2);
           setIsListening(false);
@@ -58,6 +120,10 @@ export default function ScenarioSelectPage() {
   };
 
   const getMainTitle = () => {
+    if (showInactivityMessage) {
+      return "말랭이가 대답을 기다리고 있어요.";
+    }
+
     switch (currentState) {
       case 0:
         return "어떤 상황을 연습하고 싶은지\n편하게 말해보세요.";
@@ -73,6 +139,10 @@ export default function ScenarioSelectPage() {
   };
 
   const getSubDesc = () => {
+    if (showInactivityMessage) {
+      return "Cheer up!";
+    }
+
     switch (currentState) {
       case 0:
         return "마이크를 누르면 바로 시작돼요";
@@ -93,6 +163,26 @@ export default function ScenarioSelectPage() {
 
   const handleLogin = () => {
     router.push("/auth/login");
+  };
+
+  const handleContinueChat = () => {
+    setShowWaitPopup(false);
+    resetTimers();
+    startInactivityTimer();
+  };
+
+  const handleStopFromWait = () => {
+    router.push("/auth/signup");
+  };
+
+  const handleContinueFromEnd = () => {
+    setShowEndChatPopup(false);
+    resetTimers();
+    startInactivityTimer();
+  };
+
+  const handleStopFromEnd = () => {
+    router.push("/auth/signup");
   };
 
   return (
@@ -116,24 +206,95 @@ export default function ScenarioSelectPage() {
         </div>
 
         {/* Mic Button - Footer */}
-        <div className="mt-8">
+        <div className="mt-6">
           <MicButton
             isListening={isListening}
             onClick={handleMicClick}
             size="md"
             className={currentState === 3 ? "pointer-events-none opacity-50" : ""}
           />
-
-          {/* 임시 테스트 링크 */}
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => setShowLoginPopup(true)}
-              className="text-sm text-gray-500 underline hover:text-gray-700 transition"
-            >
-              회원가입 권유 팝업 열기 (테스트)
-            </button>
-          </div>
         </div>
+
+          {/* 임시 테스트 링크들 */}
+          <div className="mt-6 flex flex-col gap-2 items-center border-t pt-4">
+            <p className="text-xs font-bold text-gray-600 mb-1">테스트용 링크</p>
+
+            {/* 상황별 테스트 */}
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button
+                onClick={() => {
+                  setCurrentState(0);
+                  setIsListening(false);
+                  setShowInactivityMessage(false);
+                }}
+                className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full transition"
+              >
+                초기 상태
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentState(1);
+                  setIsListening(true);
+                  setShowInactivityMessage(false);
+                }}
+                className="text-xs px-3 py-1 bg-blue-100 hover:bg-blue-200 rounded-full transition"
+              >
+                듣는 중
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentState(2);
+                  setIsListening(false);
+                  setShowInactivityMessage(false);
+                }}
+                className="text-xs px-3 py-1 bg-red-100 hover:bg-red-200 rounded-full transition"
+              >
+                인식 실패
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentState(3);
+                  setIsListening(false);
+                  setShowInactivityMessage(false);
+                }}
+                className="text-xs px-3 py-1 bg-green-100 hover:bg-green-200 rounded-full transition"
+              >
+                인식 성공
+              </button>
+              <button
+                onClick={() => {
+                  setShowInactivityMessage(true);
+                  setIsListening(true);
+                }}
+                className="text-xs px-3 py-1 bg-yellow-100 hover:bg-yellow-200 rounded-full transition"
+              >
+                비활동 메시지
+              </button>
+            </div>
+
+            {/* 팝업 테스트 */}
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              <button
+                onClick={() => setShowLoginPopup(true)}
+                className="text-xs px-3 py-1 bg-purple-100 hover:bg-purple-200 rounded-full transition"
+              >
+                로그인 권유 팝업
+              </button>
+              <button
+                onClick={() => setShowWaitPopup(true)}
+                className="text-xs px-3 py-1 bg-orange-100 hover:bg-orange-200 rounded-full transition"
+              >
+                응답 대기 팝업
+              </button>
+              <button
+                onClick={() => setShowEndChatPopup(true)}
+                className="text-xs px-3 py-1 bg-pink-100 hover:bg-pink-200 rounded-full transition"
+              >
+                대화 종료 팝업
+              </button>
+            </div>
+          </div>
+
       </FullLayout>
 
       {/* Login Popup */}
@@ -163,6 +324,72 @@ export default function ScenarioSelectPage() {
                 className="h-14 flex-1 rounded-full bg-[#7666f5] text-base font-semibold text-white shadow-[0_10px_30px_rgba(118,102,245,0.35)] transition hover:bg-[#6758e8]"
               >
                 로그인하기
+              </Button>
+            </div>
+          </div>
+        </PopupLayout>
+      )}
+
+      {/* Wait Popup - 응답 대기 팝업 */}
+      {showWaitPopup && (
+        <PopupLayout onClose={() => setShowWaitPopup(false)} maxWidth="md" showCloseButton={false}>
+          <div className="flex flex-col items-center gap-6 py-6">
+            {/* Text */}
+            <div className="text-center">
+              <p className="text-xl font-semibold text-gray-800 leading-relaxed">
+                대화가 잠시 멈췄어요.
+                <br />
+                계속 이야기 할까요?
+              </p>
+            </div>
+
+            {/* Buttons - 한 행에 2개 */}
+            <div className="flex w-full gap-3">
+              <Button
+                onClick={handleStopFromWait}
+                variant="outline"
+                className="h-14 flex-1 rounded-full border-2 border-gray-300 text-base font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                대화 그만하기
+              </Button>
+              <Button
+                onClick={handleContinueChat}
+                className="h-14 flex-1 rounded-full bg-[#7666f5] text-base font-semibold text-white shadow-[0_10px_30px_rgba(118,102,245,0.35)] transition hover:bg-[#6758e8]"
+              >
+                이어 말하기
+              </Button>
+            </div>
+          </div>
+        </PopupLayout>
+      )}
+
+      {/* End Chat Popup - 대화 종료 팝업 */}
+      {showEndChatPopup && (
+        <PopupLayout onClose={() => setShowEndChatPopup(false)} maxWidth="md" showCloseButton={false}>
+          <div className="flex flex-col items-center gap-6 py-6">
+            {/* Text */}
+            <div className="text-center">
+              <p className="text-xl font-semibold text-gray-800 leading-relaxed">
+                지금은 여기까지만 할까요?
+                <br />
+                나중에 같은 주제로 다시 대화할 수 있어요.
+              </p>
+            </div>
+
+            {/* Buttons - 한 행에 2개 */}
+            <div className="flex w-full gap-3">
+              <Button
+                onClick={handleStopFromEnd}
+                variant="outline"
+                className="h-14 flex-1 rounded-full border-2 border-gray-300 text-base font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                대화 그만하기
+              </Button>
+              <Button
+                onClick={handleContinueFromEnd}
+                className="h-14 flex-1 rounded-full bg-[#7666f5] text-base font-semibold text-white shadow-[0_10px_30px_rgba(118,102,245,0.35)] transition hover:bg-[#6758e8]"
+              >
+                이어 말하기
               </Button>
             </div>
           </div>
