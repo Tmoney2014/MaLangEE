@@ -132,29 +132,29 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: url(/images/login-bg-01.png);
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background-image: url(/images/split_layout_bg.svg);
+    background-size: 100% auto;
+    background-repeat: repeat-y;
+    background-position: top center;
   }
 }
 
 /* 배경 이미지 클래스 기반 설정 */
 @layer components {
   body.bg-login-01 {
-    background-image: url(/images/login-bg-01.png);
+    background-image: url(/images/split_layout_bg.svg);
   }
 
   body.bg-login-02 {
-    background-image: url(/images/login-bg-02.png);
+    background-image: url(/images/full_layout_bg.svg);
   }
 
   body.bg-auth-flow {
-    background-image: url(/images/login-bg-01.png);
+    background-image: url(/split_layout_bg.svg);
   }
 
   body.bg-chat-history {
-    background-image: url(/images/login-bg-01.png);
+    background-image: url(/split_layout_bg.svg);
   }
 }
 
