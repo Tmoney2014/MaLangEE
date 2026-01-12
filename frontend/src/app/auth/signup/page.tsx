@@ -1,22 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, type Resolver } from "react-hook-form";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { PopupLayout } from "@/shared/ui/PopupLayout";
 import { MalangEE } from "@/shared/ui";
-import {
-  authApi,
-  useLogin,
-  useLoginIdCheck,
-  useNicknameCheck,
-  registerSchema,
-  type RegisterFormData,
-} from "@/features/auth";
+import { authApi, useLogin, useLoginIdCheck, useNicknameCheck, usePasswordValidation, registerSchema, type RegisterFormData } from "@/features/auth";
 import { FullLayout } from "@/shared/ui/FullLayout";
 import { Button } from "@/shared/ui";
+
+// safeParse를 사용하는 커스텀 resolver (콘솔 에러 방지)
+const safeZodResolver: Resolver<RegisterFormData> = async (values) => {
+  const result = registerSchema.safeParse(values);
+  
+  if (result.success) {
+    return { values: result.data, errors: {} };
+  }
+  
+  // ZodError를 React Hook Form의 에러 형식으로 변환
+  const errors: Record<string, { type: string; message: string }> = {};
+  result.error.issues.forEach((issue) => {
+    const path = issue.path.join(".");
+    if (path) {
+      errors[path] = {
+        type: issue.code,
+        message: issue.message,
+      };
+    }
+  });
+  
+  return { values: {}, errors };
+};
 
 export default function RegisterPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -28,7 +43,9 @@ export default function RegisterPage() {
     formState: { errors },
     watch,
   } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+    resolver: safeZodResolver,
+    mode: "onBlur",
+    reValidateMode: "onBlur",
   });
 
   const watchLoginId = watch("login_id");
@@ -37,6 +54,7 @@ export default function RegisterPage() {
   // 중복 확인 훅
   const loginIdCheck = useLoginIdCheck(watchLoginId);
   const nicknameCheck = useNicknameCheck(watchNickname);
+  const passwordCheck = usePasswordValidation(watch("password"));
 
   // 회원가입 mutation (로컬에서 처리하여 리다이렉트 제어)
   const registerMutation = useMutation({
@@ -105,6 +123,8 @@ export default function RegisterPage() {
     !loginIdCheck.isAvailable ||
     !nicknameCheck.isAvailable;
 
+  // 비밀번호 체크는 usePasswordValidation 훅으로 처리
+
   return (
     <FullLayout showHeader={false} maxWidth="md:max-w-[450px]">
       <div className="w-full space-y-8">
@@ -165,8 +185,21 @@ export default function RegisterPage() {
                 className="h-[56px] w-full rounded-full border border-[#d4d0df] bg-white px-5 text-base text-[#1F1C2B] shadow-[0_2px_6px_rgba(0,0,0,0.03)] placeholder:text-[#8c869c] focus:border-[#7B6CF6] focus:outline-none focus:ring-2 focus:ring-[#cfc5ff]"
                 style={{ letterSpacing: "-0.2px" }}
               />
+              {passwordCheck.isChecking && (
+                <p className="mt-2 px-1 text-sm text-blue-500">확인 중...</p>
+              )}
               {errors.password && (
                 <p className="mt-2 px-1 text-sm text-red-500">{errors.password.message}</p>
+              )}
+              {passwordCheck.error && !errors.password && (
+                <p className="mt-2 px-1 text-sm text-red-500">{passwordCheck.error}</p>
+              )}
+              {!passwordCheck.isChecking && !passwordCheck.error && passwordCheck.isValid && watch("password") && (
+                <p className="mt-2 px-1 text-sm text-green-600">사용 가능한 비밀번호입니다</p>
+              )}
+              {/* 서버/submit 관련 validationError가 비밀번호 관련이면 하단에 표시 */}
+              {validationError && validationError.includes("비밀번호") && (
+                <p className="mt-2 px-1 text-sm text-red-500">{validationError}</p>
               )}
             </div>
           </div>
@@ -206,7 +239,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {validationError && (
+          {/* validationError가 비밀번호 관련이 아닐 때만 폼 하단에 표시 */}
+          {validationError && !validationError.includes("비밀번호") && (
             <p className="px-1 text-sm text-red-500" style={{ letterSpacing: "-0.1px" }}>
               *{validationError}
             </p>
