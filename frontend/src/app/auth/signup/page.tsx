@@ -33,6 +33,14 @@ const safeZodResolver: Resolver<RegisterFormData> = async (values) => {
   return { values: {}, errors };
 };
 
+const NETWORK_ERROR_MESSAGE = "서버에 연결할 수 없습니다. 네트워크를 확인해주세요.";
+const getCheckErrorMessage = (err?: unknown): string | null => {
+  if (!err) return null;
+  const message = String(err);
+  const networkPatterns = [/failed to fetch/i, /network/i, /ECONNREFUSED/i, /timeout/i, /connect/i, /서버/i];
+  return networkPatterns.some((pattern) => pattern.test(message)) ? NETWORK_ERROR_MESSAGE : message;
+};
+
 export default function RegisterPage() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -81,21 +89,23 @@ export default function RegisterPage() {
   const registerPending = registerMutation.status === "pending";
 
   const onSubmit = (data: RegisterFormData) => {
-  setValidationError(null);
-  setLoginError(null);
+    setValidationError(null);
+    setLoginError(null);
 
-  // 방어적 유효성 검사: ZodError가 프로미스에서 uncaught 되는 것을 막기 위해 safeParse 사용
-  const parsed = registerSchema.safeParse(data);
-  if (!parsed.success) {
-    // 가능한 한 첫 번째 에러 메시지를 보여줍니다
-    const firstIssue = parsed.error.issues[0];
-    setValidationError(firstIssue.message || "입력 정보를 확인해주세요");
-    return;
-  }
+    // 방어적 유효성 검사: ZodError가 프로미스에서 uncaught 되는 것을 막기 위해 safeParse 사용
+    const parsed = registerSchema.safeParse(data);
+    if (!parsed.success) {
+      // 가능한 한 첫 번째 에러 메시지를 보여줍니다
+      const firstIssue = parsed.error.issues[0];
+      setValidationError(firstIssue.message || "입력 정보를 확인해주세요");
+      return;
+    }
 
     // 유효성 검사 오류가 있는지 확인
     if (loginIdCheck.error || nicknameCheck.error) {
-      setValidationError("아이디 또는 닉네임을 확인해주세요");
+      const message =
+        getCheckErrorMessage(loginIdCheck.error) || getCheckErrorMessage(nicknameCheck.error) || "아이디 또는 닉네임을 확인해주세요";
+      setValidationError(message);
       return;
     }
 
@@ -157,7 +167,7 @@ export default function RegisterPage() {
                 <p className="mt-2 px-1 text-sm text-red-500">{errors.login_id.message}</p>
               )}
               {loginIdCheck.error && !errors.login_id && (
-                <p className="mt-2 px-1 text-sm text-red-500">{loginIdCheck.error}</p>
+                <p className="mt-2 px-1 text-sm text-red-500">{getCheckErrorMessage(loginIdCheck.error)}</p>
               )}
               {!loginIdCheck.isChecking &&
                 !loginIdCheck.error &&
@@ -228,7 +238,7 @@ export default function RegisterPage() {
                 <p className="mt-2 px-1 text-sm text-red-500">{errors.nickname.message}</p>
               )}
               {nicknameCheck.error && !errors.nickname && (
-                <p className="mt-2 px-1 text-sm text-red-500">{nicknameCheck.error}</p>
+                <p className="mt-2 px-1 text-sm text-red-500">{getCheckErrorMessage(nicknameCheck.error)}</p>
               )}
               {!nicknameCheck.isChecking &&
                 !nicknameCheck.error &&

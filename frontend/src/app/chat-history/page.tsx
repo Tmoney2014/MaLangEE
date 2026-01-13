@@ -314,7 +314,7 @@ export default function DashboardPage() {
         rightChildren={rightContent}
         leftColSpan={4}
         rightColSpan={8}
-        showHeader={!showNicknamePopup && !showDetailPopup}
+        showHeader={false} //{!showNicknamePopup && !showDetailPopup}
       />
 
       {/* 대화 상세 팝업 */}
