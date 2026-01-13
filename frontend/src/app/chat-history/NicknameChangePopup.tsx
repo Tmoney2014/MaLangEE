@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, type Resolver } from "react-hook-form";
 import {
   type NicknameUpdateFormData,
   nicknameUpdateSchema,
@@ -12,6 +11,28 @@ import {
 } from "@/features/auth";
 import { PopupLayout } from "@/shared/ui/PopupLayout";
 import { Button } from "@/shared/ui";
+
+// safeParse를 사용하는 커스텀 resolver (콘솔 에러 방지)
+const nicknameUpdateResolver: Resolver<NicknameUpdateFormData> = async (values) => {
+  const result = nicknameUpdateSchema.safeParse(values);
+
+  if (result.success) {
+    return { values: result.data, errors: {} };
+  }
+
+  const errors: Record<string, { type: string; message: string }> = {};
+  result.error.issues.forEach((issue) => {
+    const path = issue.path.join(".");
+    if (path) {
+      errors[path] = {
+        type: issue.code,
+        message: issue.message,
+      };
+    }
+  });
+
+  return { values: {}, errors };
+};
 
 interface NicknameChangePopupProps {
   onClose: () => void;
@@ -32,7 +53,7 @@ export const NicknameChangePopup: React.FC<NicknameChangePopupProps> = ({
     watch,
     setValue,
   } = useForm<NicknameUpdateFormData>({
-    resolver: zodResolver(nicknameUpdateSchema),
+    resolver: nicknameUpdateResolver,
   });
 
   const watchNewNickname = watch("new_nickname");
@@ -101,84 +122,84 @@ export const NicknameChangePopup: React.FC<NicknameChangePopupProps> = ({
   return (
     <PopupLayout onClose={onClose} title="닉네임 변경" maxWidth="md">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            {/* 기존 닉네임 입력 (읽기 전용) */}
-            <div className="flex flex-col gap-2">
-              <label
-                className="text-sm font-medium text-[#1F1C2B]"
-                style={{ letterSpacing: "-0.2px" }}
-              >
-                기존 닉네임
-              </label>
-              <div className="relative">
-                <input
-                  id="current_nickname"
-                  type="text"
-                  placeholder="기존 닉네임"
-                  {...register("current_nickname")}
-                  readOnly
-                  className="h-[48px] w-full cursor-not-allowed rounded-full border border-[#d4d0df] bg-gray-100 px-5 text-sm text-[#1F1C2B] shadow-[0_2px_6px_rgba(0,0,0,0.03)] placeholder:text-[#8c869c]"
-                  style={{ letterSpacing: "-0.2px" }}
-                />
-                {errors.current_nickname && (
-                  <p className="mt-1 px-1 text-xs text-red-500">
-                    {errors.current_nickname.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* 새로운 닉네임 입력 */}
-            <div className="flex flex-col gap-2">
-              <label
-                className="text-sm font-medium text-[#1F1C2B]"
-                style={{ letterSpacing: "-0.2px" }}
-              >
-                새로운 닉네임
-              </label>
-              <div className="relative">
-                <input
-                  id="new_nickname"
-                  type="text"
-                  placeholder="새로운 닉네임을 입력해주세요"
-                  {...register("new_nickname")}
-                  className="h-[48px] w-full rounded-full border border-[#d4d0df] bg-white px-5 text-sm text-[#1F1C2B] shadow-[0_2px_6px_rgba(0,0,0,0.03)] placeholder:text-[#8c869c] focus:border-[#7B6CF6] focus:outline-none focus:ring-2 focus:ring-[#cfc5ff]"
-                  style={{ letterSpacing: "-0.2px" }}
-                />
-                {nicknameCheck.isChecking && (
-                  <p className="mt-1 px-1 text-xs text-blue-500">확인 중...</p>
-                )}
-                {errors.new_nickname && (
-                  <p className="mt-1 px-1 text-xs text-red-500">{errors.new_nickname.message}</p>
-                )}
-                {nicknameCheck.error && !errors.new_nickname && (
-                  <p className="mt-1 px-1 text-xs text-red-500">{nicknameCheck.error}</p>
-                )}
-                {!nicknameCheck.isChecking &&
-                  !nicknameCheck.error &&
-                  nicknameCheck.isAvailable &&
-                  watchNewNickname && (
-                    <p className="mt-1 px-1 text-xs text-green-600">사용 가능한 닉네임입니다</p>
-                  )}
-              </div>
-            </div>
-
-            {validationError && (
-              <p className="px-1 text-xs text-red-500" style={{ letterSpacing: "-0.1px" }}>
-                *{validationError}
+        {/* 기존 닉네임 입력 (읽기 전용) */}
+        <div className="flex flex-col gap-2">
+          <label
+            className="text-sm font-medium text-[#1F1C2B]"
+            style={{ letterSpacing: "-0.2px" }}
+          >
+            기존 닉네임
+          </label>
+          <div className="relative">
+            <input
+              id="current_nickname"
+              type="text"
+              placeholder="기존 닉네임"
+              {...register("current_nickname")}
+              readOnly
+              className="h-[48px] w-full cursor-not-allowed rounded-full border border-[#d4d0df] bg-gray-100 px-5 text-sm text-[#1F1C2B] shadow-[0_2px_6px_rgba(0,0,0,0.03)] placeholder:text-[#8c869c]"
+              style={{ letterSpacing: "-0.2px" }}
+            />
+            {errors.current_nickname && (
+              <p className="mt-1 px-1 text-xs text-red-500">
+                {errors.current_nickname.message}
               </p>
             )}
+          </div>
+        </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              fullWidth
-              disabled={isSubmitDisabled}
-              isLoading={updateNicknameMutation.isPending}
-            >
-              {updateNicknameMutation.isPending ? "변경 중..." : "변경하기"}
-            </Button>
-          </form>
+        {/* 새로운 닉네임 입력 */}
+        <div className="flex flex-col gap-2">
+          <label
+            className="text-sm font-medium text-[#1F1C2B]"
+            style={{ letterSpacing: "-0.2px" }}
+          >
+            새로운 닉네임
+          </label>
+          <div className="relative">
+            <input
+              id="new_nickname"
+              type="text"
+              placeholder="새로운 닉네임을 입력해주세요"
+              {...register("new_nickname")}
+              className="h-[48px] w-full rounded-full border border-[#d4d0df] bg-white px-5 text-sm text-[#1F1C2B] shadow-[0_2px_6px_rgba(0,0,0,0.03)] placeholder:text-[#8c869c] focus:border-[#7B6CF6] focus:outline-none focus:ring-2 focus:ring-[#cfc5ff]"
+              style={{ letterSpacing: "-0.2px" }}
+            />
+            {nicknameCheck.isChecking && (
+              <p className="mt-1 px-1 text-xs text-blue-500">확인 중...</p>
+            )}
+            {errors.new_nickname && (
+              <p className="mt-1 px-1 text-xs text-red-500">{errors.new_nickname.message}</p>
+            )}
+            {nicknameCheck.error && !errors.new_nickname && (
+              <p className="mt-1 px-1 text-xs text-red-500">{nicknameCheck.error}</p>
+            )}
+            {!nicknameCheck.isChecking &&
+              !nicknameCheck.error &&
+              nicknameCheck.isAvailable &&
+              watchNewNickname && (
+                <p className="mt-1 px-1 text-xs text-green-600">사용 가능한 닉네임입니다</p>
+              )}
+          </div>
+        </div>
+
+        {validationError && (
+          <p className="px-1 text-xs text-red-500" style={{ letterSpacing: "-0.1px" }}>
+            *{validationError}
+          </p>
+        )}
+
+        <Button
+          type="submit"
+          variant="primary"
+          size="md"
+          fullWidth
+          disabled={isSubmitDisabled}
+          isLoading={updateNicknameMutation.isPending}
+        >
+          {updateNicknameMutation.isPending ? "변경 중..." : "변경하기"}
+        </Button>
+      </form>
     </PopupLayout>
   );
 };

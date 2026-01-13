@@ -2,12 +2,33 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, type Resolver } from "react-hook-form";
 import { useState } from "react";
 import { SplitViewLayout } from "@/shared/ui/SplitViewLayout";
 import { Button } from "@/shared/ui";
 import { type LoginFormData, loginSchema, useLogin } from "@/features/auth";
+
+// safeParse를 사용하는 커스텀 resolver (콘솔 에러 방지)
+const loginResolver: Resolver<LoginFormData> = async (values) => {
+  const result = loginSchema.safeParse(values);
+
+  if (result.success) {
+    return { values: result.data, errors: {} };
+  }
+
+  const errors: Record<string, { type: string; message: string }> = {};
+  result.error.issues.forEach((issue) => {
+    const path = issue.path.join(".");
+    if (path) {
+      errors[path] = {
+        type: issue.code,
+        message: issue.message,
+      };
+    }
+  });
+
+  return { values: {}, errors };
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,12 +39,16 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+    resolver: loginResolver,
   });
 
   const loginMutation = useLogin();
 
   const onSubmit = (data: LoginFormData) => {
+    // 방어적 유효성 검사 (콘솔 에러 방지)
+    const result = loginSchema.safeParse(data);
+    if (!result.success) return;
+
     loginMutation.mutate(data);
   };
 
