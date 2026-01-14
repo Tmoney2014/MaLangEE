@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { AuthGuard } from "@/features/auth";
 import { Mic } from "lucide-react";
+import { MalangEE } from "@/shared/ui";
 
 export default function TopicSelectPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -20,7 +21,7 @@ export default function TopicSelectPage() {
 
   return (
     <AuthGuard>
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#F6D7FF] to-[#DCE9FF]">
+      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-gradient-purple to-gradient-blue">
         {/* 배경 장식 원형들 */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-[10%] top-[15%] h-32 w-32 rounded-full bg-white/30 blur-3xl" />
@@ -28,7 +29,7 @@ export default function TopicSelectPage() {
           <div className="absolute bottom-[20%] left-[20%] h-28 w-28 rounded-full bg-[#fdf4c7] opacity-60 blur-3xl" />
           <div className="absolute bottom-[30%] right-[10%] h-20 w-20 rounded-full bg-[#d5c7ff] opacity-70 blur-2xl" />
           <div className="absolute left-[5%] top-[60%] h-16 w-16 rounded-full bg-[#eecbff] opacity-70 blur-xl" />
-          <div className="absolute right-[5%] bottom-[10%] h-24 w-24 rounded-full bg-[#c6d5ff]/50 blur-3xl" />
+          <div className="absolute bottom-[10%] right-[5%] h-24 w-24 rounded-full bg-[#c6d5ff]/50 blur-3xl" />
         </div>
 
         {/* 메인 콘텐츠 */}
@@ -36,14 +37,14 @@ export default function TopicSelectPage() {
           {/* 헤더 */}
           <header className="flex items-center justify-between px-8 py-6 md:px-12">
             <div
-              className="text-xl font-semibold text-[#5F51D9]"
+              className="text-xl font-semibold text-brand"
               style={{ letterSpacing: "-0.3px" }}
             >
-              MalangEE
+              <img src={"/images/logo.png"} alt="MalangEE Logo" />
             </div>
             <button
               onClick={handleEndConversation}
-              className="text-sm font-medium text-[#625a75] transition hover:text-[#7B6CF6]"
+              className="text-sm font-medium text-text-secondary transition hover:text-brand"
               style={{ letterSpacing: "-0.1px" }}
             >
               대화 종료하기
@@ -53,7 +54,7 @@ export default function TopicSelectPage() {
           {/* 중앙 콘텐츠 */}
           <div className="flex flex-1 flex-col items-center justify-center px-6 pb-20">
             {/* 카드 컨테이너 */}
-            <div className="relative w-full max-w-[640px] overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-white/80 via-white/70 to-[#f0e8ff]/80 shadow-[0_20px_80px_rgba(125,106,246,0.25)] backdrop-blur-2xl">
+            <div className="relative w-full max-w-[640px] overflow-hidden rounded-[32px] border border-white/60 bg-gradient-to-br from-white/80 via-white/70 to-brand-50/80 shadow-[0_20px_80px_rgba(125,106,246,0.25)] backdrop-blur-2xl">
               {/* 카드 내부 장식 */}
               <div className="absolute -left-12 top-12 h-28 w-28 rounded-full bg-[#f6e8ff] blur-3xl" />
               <div className="absolute right-10 top-6 h-16 w-16 rounded-full bg-[#fdf4c7] blur-2xl" />
@@ -62,20 +63,13 @@ export default function TopicSelectPage() {
                 {/* 마스코트 */}
                 <div className="relative flex h-32 w-32 items-center justify-center">
                   <div className="absolute inset-0 rounded-full bg-[#fdf4c7]/30 blur-xl" />
-                  <Image
-                    src="/images/mascot.svg"
-                    alt="MalangEE mascot"
-                    width={128}
-                    height={128}
-                    priority
-                    className="relative h-32 w-32 object-contain"
-                  />
+                  <MalangEE size={128} />
                 </div>
 
                 {/* 제목 */}
                 <div className="space-y-3 text-center">
                   <h1
-                    className="text-2xl font-bold leading-snug text-[#1F1C2B] md:text-3xl"
+                    className="text-2xl font-bold leading-snug text-text-primary md:text-3xl"
                     style={{ letterSpacing: "-0.5px" }}
                   >
                     어떤 상황을 연습하고 싶은지
@@ -83,7 +77,7 @@ export default function TopicSelectPage() {
                     편하게 말해보세요.
                   </h1>
                   <p
-                    className="text-base text-[#625a75] md:text-lg"
+                    className="text-base text-text-secondary md:text-lg"
                     style={{ letterSpacing: "-0.2px" }}
                   >
                     마이크를 누른 바로 시작해요
@@ -100,7 +94,7 @@ export default function TopicSelectPage() {
                     ${
                       isRecording
                         ? "bg-red-500 hover:bg-red-600"
-                        : "bg-[#7B6CF6] hover:bg-[#6B5CE6]"
+                        : "bg-brand hover:bg-brand/90"
                     }
                   `}
                   aria-label={isRecording ? "녹음 중지" : "녹음 시작"}

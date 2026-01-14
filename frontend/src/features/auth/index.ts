@@ -2,12 +2,13 @@
 export {
   // Schemas
   loginSchema,
-  registerSchema,
+  registerSchema, nicknameUpdateSchema,
   tokenSchema,
   userSchema,
   // Types
   type LoginFormData,
   type RegisterFormData,
+  type NicknameUpdateFormData,
   type Token,
   type User,
   type CheckAvailabilityResponse,
@@ -24,12 +25,12 @@ export {
   useDeleteAccount,
   useCheckLoginId,
   useCheckNickname,
+  useUpdateNickname,
   useCurrentUser,
-  useIsAuthenticated,
 } from "./api";
 
 // Hooks
-export { useAuth, useLoginIdCheck, useNicknameCheck } from "./hook";
+export { useAuth, useLoginIdCheck, useNicknameCheck, usePasswordValidation } from "./hook";
 
 // UI
 export { AuthGuard, GuestGuard } from "./ui";
